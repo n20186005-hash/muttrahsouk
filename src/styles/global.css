@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #18110d;
+  --coffee: #2b1b13;
+  --wood: #4a2b1d;
+  --brass: #b98739;
+  --saffron: #e2a52e;
+  --turquoise: #176b68;
+  --sand: #f1e3c4;
+  --ivory: #fffaf0;
+  --paper: #f7f0df;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; background: var(--ink); }
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(185,135,57,.12), transparent 28rem),
+    var(--ivory);
+  font-family: Tahoma, Arial, "Noto Sans Arabic", sans-serif;
+  line-height: 1.85;
+}
+a { color: inherit; }
+::selection { background: var(--saffron); color: var(--ink); }
+
+.shell { width: min(1180px, calc(100% - 2rem)); margin-inline: auto; }
+.section { padding: 5.5rem 0; }
+.kicker { color: var(--turquoise); font-weight: 800; letter-spacing: .04em; }
+.display { font-family: Georgia, "Times New Roman", serif; }
+.card {
+  border: 1px solid rgba(74,43,29,.15);
+  background: rgba(255,250,240,.92);
+  box-shadow: 0 20px 60px rgba(43,27,19,.08);
+}
+.arch { border-radius: 10rem 10rem 1.5rem 1.5rem / 5rem 5rem 1.5rem 1.5rem; }
+.pattern {
+  background-image:
+    linear-gradient(30deg, rgba(185,135,57,.10) 12%, transparent 12.5%, transparent 87%, rgba(185,135,57,.10) 87.5%, rgba(185,135,57,.10)),
+    linear-gradient(150deg, rgba(185,135,57,.10) 12%, transparent 12.5%, transparent 87%, rgba(185,135,57,.10) 87.5%, rgba(185,135,57,.10));
+  background-size: 40px 70px;
+}
+.legal h2 { margin-top: 2.5rem; font-size: 1.55rem; font-weight: 800; }
+.legal p, .legal li { color: #4d4038; }
+.legal ul { padding-right: 1.2rem; list-style: disc; }

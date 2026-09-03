@@ -1,0 +1,10 @@
+{
+  "name": "دليل سوق مطرح",
+  "short_name": "سوق مطرح",
+  "lang": "ar-OM",
+  "dir": "rtl",
+  "icons": [
+    {"src":"/icons/favicon.svg","sizes":"any","type":"image/svg+xml"},
+    {"src":"/icons/apple-touch-icon.svg","sizes":"180x180","type":"image/svg+xml"}
+  ]
+}

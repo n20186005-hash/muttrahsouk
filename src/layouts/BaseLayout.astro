@@ -1,0 +1,51 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import AnalyticsConsent from '../components/AnalyticsConsent.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  image?: string;
+  jsonLd?: unknown | unknown[];
+  noindex?: boolean;
+}
+const { title, description, image, jsonLd, noindex = false } = Astro.props;
+const site = Astro.site;
+const path = Astro.url.pathname;
+const absolute = (pathname: string) => site ? new URL(pathname, site).toString() : undefined;
+const canonical = absolute(path);
+const ogImage = image ? (site && image.startsWith('/') ? absolute(image) : image) : undefined;
+---
+<!doctype html>
+<html lang="ar-OM" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#18110d" />
+    {noindex && <meta name="robots" content="noindex,follow" />}
+    <title>{title}</title>
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ar_OM" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+  </head>
+  <body>
+    <Header />
+    <main><slot /></main>
+    <Footer />
+    <AnalyticsConsent />
+  </body>
+</html>

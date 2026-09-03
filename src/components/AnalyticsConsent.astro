@@ -1,0 +1,19 @@
+<script is:inline>
+  const KEY = 'mutrah-cookie-consent';
+  const GA_ID = 'G-HXM22WWPKP';
+  const loadAnalytics = () => {
+    if (localStorage.getItem(KEY) !== 'analytics') return;
+    if (document.querySelector('script[data-ga4]')) return;
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+    script.dataset.ga4 = '1';
+    document.head.appendChild(script);
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){window.dataLayer.push(arguments)}
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', GA_ID, { anonymize_ip: true });
+  };
+  loadAnalytics();
+</script>

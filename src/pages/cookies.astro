@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="إعدادات ملفات تعريف الارتباط | دليل سوق مطرح" description="إدارة تفضيلات ملفات تعريف الارتباط في دليل سوق مطرح.">
+  <section class="section pt-36"><div class="shell max-w-4xl legal">
+    <p class="kicker">آخر تحديث: سبتمبر 2026</p><h1 class="display mt-3 text-5xl font-black">إعدادات ملفات تعريف الارتباط</h1>
+    <p class="mt-6">نستخدم ملفات تعريف الارتباط لتحسين تجربة التصفح. يمكنك إدارة تفضيلاتك أدناه، وتغييرها في أي وقت.</p>
+    <div class="mt-8 space-y-4">
+      <div class="card rounded-3xl p-6"><div class="flex items-center justify-between gap-5"><div><h2 class="!mt-0">ملفات ضرورية</h2><p>مطلوبة لتذكر اختيار الموافقة وتشغيل الوظائف الأساسية، ولا يمكن تعطيلها من هذه الصفحة.</p></div><span class="rounded-full bg-[#176b68]/10 px-4 py-2 text-sm font-bold text-[#176b68]">نشطة دائماً</span></div></div>
+      <div class="card rounded-3xl p-6"><div class="flex items-center justify-between gap-5"><div><h2 class="!mt-0">ملفات التحليل</h2><p>تساعدنا إحصاءات جوجل على فهم الاستخدام بصورة مجمعة. لا يتم تحميل أداة التحليل إلا بعد تفعيل هذا الخيار.</p></div><label class="flex items-center gap-2 font-bold"><input id="analytics-toggle" type="checkbox" class="h-5 w-5" /> تفعيل</label></div></div>
+      <div class="card rounded-3xl p-6"><div class="flex items-center justify-between gap-5"><div><h2 class="!mt-0">ملفات التفضيلات</h2><p>تُستخدم محلياً لحفظ اختيارات الموقع عندما تصبح هذه الوظائف متاحة.</p></div><label class="flex items-center gap-2 font-bold"><input id="prefs-toggle" type="checkbox" class="h-5 w-5" /> تفعيل</label></div></div>
+      <div class="card rounded-3xl p-6"><div class="flex items-center justify-between gap-5"><div><h2 class="!mt-0">ملفات التسويق</h2><p>لا يشغّل هذا المشروع حالياً منصة إعلانات مخصصة. يبقى هذا الخيار متوقفاً.</p></div><span class="rounded-full bg-black/5 px-4 py-2 text-sm font-bold">متوقفة</span></div></div>
+    </div>
+    <h2>إدارة الموافقة</h2><p>يمكنك تغيير اختيارك في أي وقت. قد يؤدي تعطيل بعض الخيارات المستقبلية إلى الحد من وظائف اختيارية، لكنه لا يمنع الوصول إلى المحتوى الأساسي.</p>
+    <div class="mt-6 flex flex-wrap gap-3"><button id="save-cookies" class="rounded-full bg-[#176b68] px-6 py-3 font-bold text-white">حفظ التفضيلات</button><button id="reject-cookies" class="rounded-full border border-[#176b68] px-6 py-3 font-bold text-[#176b68]">رفض كل غير الضروري</button></div>
+    <p id="cookie-status" class="mt-4 text-sm font-bold text-[#176b68]" aria-live="polite"></p>
+  </div></section>
+  <script is:inline>
+    const KEY='mutrah-cookie-consent', PREF='mutrah-preferences';
+    const a=document.getElementById('analytics-toggle'), p=document.getElementById('prefs-toggle'), s=document.getElementById('cookie-status');
+    a.checked=localStorage.getItem(KEY)==='analytics'; p.checked=localStorage.getItem(PREF)==='on';
+    document.getElementById('save-cookies')?.addEventListener('click',()=>{localStorage.setItem(KEY,a.checked?'analytics':'necessary'); localStorage.setItem(PREF,p.checked?'on':'off'); s.textContent='تم حفظ تفضيلاتك.'; location.reload();});
+    document.getElementById('reject-cookies')?.addEventListener('click',()=>{localStorage.setItem(KEY,'necessary'); localStorage.setItem(PREF,'off'); a.checked=false;p.checked=false;s.textContent='تم رفض جميع الملفات غير الضرورية.';});
+  </script>
+</BaseLayout>

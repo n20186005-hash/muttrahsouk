@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 70" role="img" aria-labelledby="t d">
+  <title id="t">دليل سوق مطرح</title><desc id="d">قوس سوق مع مصباح بخطوط نحاسية</desc>
+  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#E2A52E"/><stop offset="1" stop-color="#B98739"/></linearGradient></defs>
+  <g transform="translate(194 5)" fill="none" stroke="url(#g)" stroke-width="3">
+    <path d="M6 58V32C6 14 17 4 30 4s24 10 24 28v26"/>
+    <path d="M18 58V34c0-10 5-16 12-16s12 6 12 16v24"/>
+    <path d="M22 33h16M25 42h10M30 18v-8"/>
+    <circle cx="30" cy="43" r="5" fill="#E2A52E" stroke="none"/>
+  </g>
+  <text x="180" y="34" text-anchor="end" font-family="Tahoma,Arial,sans-serif" font-size="24" font-weight="700" fill="#FFF4D9">سوق مطرح</text>
+  <text x="180" y="56" text-anchor="end" font-family="Tahoma,Arial,sans-serif" font-size="13" fill="#D8C6A2">دليل الزائر المستقل</text>
+</svg>

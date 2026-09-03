@@ -1,0 +1,15 @@
+---
+import Logo from './Logo.astro';
+---
+<header class="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#18110d]/95 text-white backdrop-blur">
+  <div class="shell flex h-20 items-center justify-between gap-6">
+    <Logo />
+    <nav aria-label="التنقل الرئيسي" class="hidden items-center gap-6 text-sm font-bold lg:flex">
+      <a href="/#about" class="hover:text-[#E2A52E]">عن السوق</a>
+      <a href="/#visit" class="hover:text-[#E2A52E]">خطط للزيارة</a>
+      <a href="/#nearby" class="hover:text-[#E2A52E]">حول مطرح</a>
+      <a href="/#faq" class="hover:text-[#E2A52E]">الأسئلة الشائعة</a>
+    </nav>
+    <a href="https://maps.app.goo.gl/i18WFNytBsRsd3YW8" rel="nofollow noopener" target="_blank" class="rounded-full border border-[#B98739]/70 px-4 py-2 text-sm font-bold text-[#F6D98C] hover:bg-[#B98739] hover:text-[#18110d]">الاتجاهات</a>
+  </div>
+</header>
