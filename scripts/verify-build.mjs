@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 const root = new URL('../', import.meta.url).pathname;
 const dist = join(root,'dist');
 if (!existsSync(dist)) { console.error('BUILD AUDIT FAILED: dist missing'); process.exit(1); }
@@ -8,7 +8,12 @@ const textExt = /\.(?:html|js|mjs|css|xml|txt|json|map)$/i;
 function files(dir) { return readdirSync(dir).flatMap(n => { const p=join(dir,n); return statSync(p).isDirectory()?files(p):[p]; }); }
 let bad=false;
 const all=files(dist);
-for (const f of all.filter(f=>textExt.test(f))) {
+// dist/server holds the Cloudflare Worker framework bundle; it unavoidably
+// contains dependency strings such as Astro's example.com/localhost host
+// validators. Author content is already guarded at source level by
+// verify-source.mjs, so scan only app-owned assets/markup here.
+const serverRoot = join(dist, 'server');
+for (const f of all.filter((x) => !x.startsWith(serverRoot + sep) && textExt.test(x))) {
   const body=readFileSync(f,'utf8');
   for (const x of forbidden) if (body.includes(x)) { console.error(`BUILD AUDIT FAILED: ${x} in ${f}`); bad=true; }
 }

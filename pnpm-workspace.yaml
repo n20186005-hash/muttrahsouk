@@ -1,0 +1,6 @@
+# pnpm 11+ settings (build approvals).
+# NOTE: omitting `packages:` keeps this a single-package (root-only) workspace.
+# Replace the removed package.json "pnpm" field, which pnpm 11 no longer reads.
+allowBuilds:
+  esbuild: true
+  workerd: true

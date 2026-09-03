@@ -1,16 +1,32 @@
 # مصادر الصور الحقيقية
 
-الصور المستخدمة في النسخة الحالية صور حقيقية من سوق مطرح/مطرح وليست مولدة بالذكاء الاصطناعي. لأسباب تتعلق بقيود بيئة التسليم على تنزيل الملفات الثنائية من الإنترنت، يحتفظ المشروع بروابط المصادر المرخّصة ويعرضها مباشرة.
+الصور المستخدمة في النسخة الحالية صور حقيقية من سوق مطرح/مطرح وليست مولدة بالذكاء الاصطناعي. المصادر الأصلية مرخّصة عبر Wikimedia Commons، وقد نُسخت محلياً باسم سلس (بدون مسافات أو أقواس) وضُغطت لتحسين سرعة تحميل الصفحة.
 
-1. `واجهة سوق مطرح.jpg` — Sara K — CC BY 2.0 — Wikimedia Commons
-   https://commons.wikimedia.org/wiki/File:واجهة_سوق_مطرح.jpg
-2. `Souq Muttrah 9.jpg` — Mohammad hajeer — CC BY 4.0 — Wikimedia Commons
-   https://commons.wikimedia.org/wiki/File:Souq_Muttrah_9.jpg
-3. `Souq Muttrah 8.jpg` — Mohammad hajeer — CC BY 4.0 — Wikimedia Commons
-   https://commons.wikimedia.org/wiki/File:Souq_Muttrah_8.jpg
-4. `Muscat Souk (9).jpg` — Keirn — CC BY-SA 2.0 — Wikimedia Commons
-   https://commons.wikimedia.org/wiki/File:Muscat_Souk_(9).jpg
-5. `Muttrah corniche.jpg` — Muiad123 — CC BY-SA 4.0 — Wikimedia Commons
-   https://commons.wikimedia.org/wiki/File:Muttrah_corniche.jpg
+## النسخ المحلية المستخدمة في الموقع
 
-عند تنزيل الصور محلياً لاحقاً، احفظ الاعتمادات وشروط الترخيص المرفقة بكل صورة.
+| الملف المحلي | الملف الأصلي | المصور | الترخيص |
+| --- | --- | --- | --- |
+| `mutrah-souq-entrance.jpg` | `واجهة سوق مطرح.jpg` | Sara K | CC BY 2.0 |
+| `mutrah-souq-interior-01.jpg` | `Souq Muttrah 9.jpg` | Mohammad hajeer | CC BY 4.0 |
+| `mutrah-souq-interior-02.jpg` | `Souq Muttrah 8.jpg` | Mohammad hajeer | CC BY 4.0 |
+| `mutrah-souq-khanjar.jpg` | `Muscat Souk (9).jpg` | Keirn | CC BY-SA 2.0 |
+| `muttrah-corniche.jpg` | `Muttrah corniche.jpg` | Muiad123 | CC BY-SA 4.0 |
+
+روابط صفحات الملفات الأصلية في Wikimedia Commons:
+
+1. https://commons.wikimedia.org/wiki/File:واجهة_سوق_مطرح.jpg
+2. https://commons.wikimedia.org/wiki/File:Souq_Muttrah_9.jpg
+3. https://commons.wikimedia.org/wiki/File:Souq_Muttrah_8.jpg
+4. https://commons.wikimedia.org/wiki/File:Muscat_Souk_(9).jpg
+5. https://commons.wikimedia.org/wiki/File:Muttrah_corniche.jpg
+
+## الضغط
+
+- النص البرمجي: `scripts/optimize-images.ps1` (يعمل عبر `pnpm optimize:images`).
+- الإعدادات: JPEG بجودة 80، أطول ضلع 1600 بكسل.
+- النتيجة: انخفض الحجم الإجمالي من نحو 19.6 ميغابايت إلى نحو 1.3 ميغابايت (انخفاض ≈ 93%).
+
+## ملاحظات
+
+- الصفحة تستخدم النسخ المحلية للعرض الفوري، بينما تبقى `og:image` على رابط Wikimedia الأصلي لضمان وصول روبوتات التواصل الاجتماعي إلى صورة مطلقة العنوان في غياب نطاق نهائي.
+- عند تحديث أي صورة لاحقاً، احفظ الاعتمادات وشروط الترخيص المرفقة بكل صورة أعلاه.

@@ -1,0 +1,224 @@
+---
+// قسم الطقس — تُجلب البيانات من Open-Meteo (مفتوح، بلا مفتاح) على الخادم مع تخزين مؤقت
+// في Cloudflare: ذاكرة Cache API مشتركة + ذاكرة داخل العزل، والاسترجاع عند الفشل.
+
+const LAT = 23.6204;   // سوق مطرح، مسقط
+const LON = 58.5645;
+const TZ = 'Asia/Muscat';
+
+const api = new URL('https://api.open-meteo.com/v1/forecast');
+api.searchParams.set('latitude', String(LAT));
+api.searchParams.set('longitude', String(LON));
+api.searchParams.set(
+  'current',
+  'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,is_day,precipitation'
+);
+api.searchParams.set(
+  'daily',
+  'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max'
+);
+api.searchParams.set('timezone', TZ);
+api.searchParams.set('forecast_days', '7');
+const apiUrl = api.toString();
+const TTL_MS = 30 * 60 * 1000; // 30 دقيقة
+
+interface CurrentWeather {
+  time: string;
+  temperature_2m: number;
+  relative_humidity_2m: number;
+  apparent_temperature: number;
+  weather_code: number;
+  wind_speed_10m: number;
+  is_day: number;
+  precipitation: number;
+}
+interface DailyWeather {
+  time: string[];
+  weather_code: number[];
+  temperature_2m_max: number[];
+  temperature_2m_min: number[];
+  precipitation_probability_max: (number | null)[];
+  wind_speed_10m_max: number[];
+}
+interface Forecast {
+  current: CurrentWeather;
+  daily: DailyWeather;
+}
+
+const memory = new Map<string, { at: number; data: Forecast }>();
+
+async function fetchForecast(): Promise<Forecast | null> {
+  const now = Date.now();
+  const cached = memory.get(apiUrl);
+  if (cached && now - cached.at < TTL_MS) return cached.data;
+
+  // Cache API متاحة ككائن عام في بيئة Cloudflare Workers فقط؛
+  // في بيئة التطوير المحلية تكون غير موجودة فنلجأ لشبكة الاتصال مباشرة.
+  let cfCache: Cache | undefined;
+  try {
+    cfCache = (globalThis as unknown as { caches?: { default?: Cache } }).caches?.default;
+  } catch {
+    cfCache = undefined;
+  }
+
+  try {
+    if (cfCache) {
+      const hit = await cfCache.match(new Request(apiUrl));
+      if (hit && hit.ok) {
+        const data = (await hit.json()) as Forecast;
+        memory.set(apiUrl, { at: now, data });
+        return data;
+      }
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 9000);
+    try {
+      const res = await fetch(apiUrl, {
+        headers: { accept: 'application/json' },
+        signal: controller.signal,
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as Forecast;
+      memory.set(apiUrl, { at: now, data });
+      if (cfCache) {
+        const ttl = Math.round(TTL_MS / 1000);
+        const cachedRes = new Response(JSON.stringify(data), {
+          headers: { 'Cache-Control': `public, max-age=${ttl}` },
+        });
+        void cfCache.put(new Request(apiUrl), cachedRes).catch(() => undefined);
+      }
+      return data;
+    } finally {
+      clearTimeout(timer);
+    }
+  } catch {
+    return null;
+  }
+}
+
+const forecast = await fetchForecast();
+
+const WMO: Record<number, string> = {
+  0: 'صافٍ',
+  1: 'صحو غالباً',
+  2: 'غائم جزئياً',
+  3: 'غائم غالباً',
+  45: 'ضباب',
+  48: 'ضباب متجمد',
+  51: 'رذاذ خفيف',
+  53: 'رذاذ متواصل',
+  55: 'رذاذ كثيف',
+  56: 'رذاذ متجمد خفيف',
+  57: 'رذاذ متجمد كثيف',
+  61: 'مطر خفيف',
+  63: 'مطر متوسط',
+  65: 'مطر غزير',
+  66: 'مطر متجمد خفيف',
+  67: 'مطر متجمد كثيف',
+  71: 'ثلوج خفيفة',
+  73: 'ثلوج متوسطة',
+  75: 'ثلوج كثيفة',
+  77: 'حبيبات ثلجية',
+  80: 'زخات مطر خفيفة',
+  81: 'زخات مطر',
+  82: 'زخات مطر غزيرة',
+  85: 'زخات ثلج',
+  86: 'زخات ثلج كثيفة',
+  95: 'عاصفة رعدية',
+  96: 'عاصفة رعدية مع برد',
+  99: 'عاصفة رعدية شديدة مع برد',
+};
+const codeName = (c: number): string => WMO[c] ?? 'ظروف متغيرة';
+
+function dayLabel(iso: string, index: number): string {
+  try {
+    const d = new Date(`${iso}T12:00:00`);
+    const parts = new Intl.DateTimeFormat('ar-OM', { weekday: 'long', day: 'numeric', month: 'long' }).formatToParts(d);
+    const weekday = parts.find((p) => p.type === 'weekday')?.value ?? '';
+    const day = parts.find((p) => p.type === 'day')?.value ?? '';
+    const month = parts.find((p) => p.type === 'month')?.value ?? '';
+    return index === 0 ? `اليوم · ${weekday}` : `${weekday} ${day} ${month}`;
+  } catch {
+    return iso;
+  }
+}
+function shortTime(iso: string): string {
+  try {
+    return new Intl.DateTimeFormat('ar-OM', { hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
+  } catch {
+    return '';
+  }
+}
+const round = (n: number): number => Math.round(n);
+const isRainy = (c: number): boolean => [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99].includes(c);
+const isCloudy = (c: number): boolean => [1, 2, 3, 45, 48].includes(c);
+---
+<section id="weather" class="bg-[#f1e3c4] py-16">
+  <div class="shell">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="kicker">الطقس الحالي والتوقعات</p>
+        <h2 class="display mt-3 text-4xl font-black md:text-5xl">متى يكون الجو مناسباً لجولة السوق؟</h2>
+      </div>
+      <p class="max-w-md text-sm text-[#58483e]">يُسترشد بالبيانات فقط وليس كتنبؤ نهائي؛ السوق مسقوف في غالبه، فحتى أيام الحرارة المعتدلة تبقى زيارة الأزقة ممكنة.</p>
+    </div>
+
+    {forecast ? (
+      <div class="mt-10 space-y-6">
+        <div class="rounded-[2rem] bg-[#176b68] p-7 text-white">
+          <div class="grid items-center gap-8 md:grid-cols-[auto_1fr]">
+            <div>
+              <p class="text-sm font-bold text-[#F6D98C]">الآن في سوق مطرح</p>
+              <p class="mt-1 text-6xl font-black leading-none">{round(forecast.current.temperature_2m)}<span class="text-2xl">°م</span></p>
+              <p class="mt-2 text-lg font-bold">{codeName(forecast.current.weather_code)}{forecast.current.is_day === 0 ? ' (ليلاً)' : ''}</p>
+              <p class="mt-1 text-sm text-[#d8eee9]">محدث في {shortTime(forecast.current.time)}</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
+              <div class="rounded-2xl bg-white/12 px-3 py-4"><p class="text-xs text-[#d8eee9]">الإحساس الحراري</p><p class="mt-1 text-xl font-black">{round(forecast.current.apparent_temperature)}°م</p></div>
+              <div class="rounded-2xl bg-white/12 px-3 py-4"><p class="text-xs text-[#d8eee9]">الرطوبة</p><p class="mt-1 text-xl font-black">{round(forecast.current.relative_humidity_2m)}%</p></div>
+              <div class="rounded-2xl bg-white/12 px-3 py-4"><p class="text-xs text-[#d8eee9]">الرياح</p><p class="mt-1 text-xl font-black">{round(forecast.current.wind_speed_10m)}<span class="text-sm">كم/س</span></p></div>
+              <div class="rounded-2xl bg-white/12 px-3 py-4"><p class="text-xs text-[#d8eee9]">احتمال مطر اليوم</p><p class="mt-1 text-xl font-black">{forecast.daily.precipitation_probability_max[0] ?? 0}%</p></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-[2rem] border border-[#B98739]/20 bg-[#fffaf0] p-6">
+          <p class="font-black text-[#18110d]">توقعات الأيام السبعة</p>
+          <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
+            {forecast.daily.time.map((day, i) => {
+              const max = forecast.daily.temperature_2m_max[i];
+              const min = forecast.daily.temperature_2m_min[i];
+              const rain = forecast.daily.precipitation_probability_max[i];
+              const code = forecast.daily.weather_code[i];
+              const rainy = isRainy(code);
+              const cloudy = isCloudy(code);
+              return (
+                <div class:list={['rounded-2xl border p-4', i === 0 ? 'border-[#176b68] bg-[#176b68]/5' : 'border-black/5 bg-[#f7f0df]']}>
+                  <p class="text-xs font-black text-[#176b68]">{dayLabel(day, i)}</p>
+                  <p class="mt-1 text-sm text-[#58483e]">{codeName(code)}</p>
+                  <p class="mt-3 flex items-baseline justify-between gap-2 text-sm font-bold">
+                    <span class={rainy ? 'text-[#176b68]' : cloudy ? 'text-[#B98739]' : 'text-[#0a7a52]'}>▲ {round(max)}°</span>
+                    <span class="text-[#66574e]">▼ {round(min)}°</span>
+                  </p>
+                  <p class="mt-2 text-xs text-[#66574e]">
+                    {rain != null ? `مطر ${rain}%` : 'مطر —'}
+                    <span class="mx-1">·</span>
+                    رياح {round(forecast.daily.wind_speed_10m_max[i])} كم/س
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+          <p class="mt-5 text-xs leading-6 text-[#66574e]">
+            بيانات الطقس استرشادية مقدمة من خدمة <a href="https://open-meteo.com" target="_blank" rel="noopener" class="font-bold text-[#176b68] underline">Open-Meteo</a> المفتوحة (دون مفتاح)، وتُخزَّن مؤقتاً على الخادم وتُحدَّث كل نحو 30 دقيقة. قد تختلف التوقعات؛ راجع مصادر الأرصاد المحلية قبل اتخاذ قرار يتعلق بخطة يومك.
+          </p>
+        </div>
+      </div>
+    ) : (
+      <div class="mt-10 max-w-3xl rounded-[2rem] border border-[#B98739]/30 bg-[#fffaf0] p-8 text-[#58483e]">
+        <p class="font-black text-[#18110d]">تعذر تحميل بيانات الطقس حالياً</p>
+        <p class="mt-2 text-sm">حدث خطأ مؤقت في جلب البيانات من الخدمة المفتوحة. أعد تحميل الصفحة لاحقاً، أو راجع تطبيقات الأرصاد المحلية خلال زيارتك.</p>
+      </div>
+    )}
+  </div>
+</section>

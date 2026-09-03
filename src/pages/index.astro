@@ -1,12 +1,18 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import HistorySection from '../components/HistorySection.astro';
+import FacilitiesSection from '../components/FacilitiesSection.astro';
+import WeatherSection from '../components/WeatherSection.astro';
+import RouteSection from '../components/RouteSection.astro';
 
-const hero = 'https://upload.wikimedia.org/wikipedia/commons/2/2b/%D9%88%D8%A7%D8%AC%D9%87%D8%A9_%D8%B3%D9%88%D9%82_%D9%85%D8%B7%D8%B1%D8%AD.jpg';
+// نسخ محلية مضغوطة (الأصول والتراخيص موثقة في public/images/IMAGE_SOURCES.md)
+const hero = '/images/mutrah-souq-entrance.jpg';
+const ogHero = 'https://upload.wikimedia.org/wikipedia/commons/2/2b/%D9%88%D8%A7%D8%AC%D9%87%D8%A9_%D8%B3%D9%88%D9%82_%D9%85%D8%B7%D8%B1%D8%AD.jpg';
 const gallery = [
-  ['https://upload.wikimedia.org/wikipedia/commons/0/0b/Souq_Muttrah_9.jpg','ممرات سوق مطرح ومحال اللبان والتوابل'],
-  ['https://upload.wikimedia.org/wikipedia/commons/8/84/Souq_Muttrah_8.jpg','محال الحرف والهدايا داخل السوق'],
-  ['https://upload.wikimedia.org/wikipedia/commons/3/32/Muscat_Souk_%289%29.jpg','الخناجر الفضية العُمانية المعروضة في السوق'],
-  ['https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Muttrah_corniche.jpg/1600px-Muttrah_corniche.jpg','كورنيش مطرح والميناء بالقرب من السوق']
+  ['/images/mutrah-souq-interior-01.jpg','ممرات سوق مطرح ومحال اللبان والتوابل'],
+  ['/images/mutrah-souq-interior-02.jpg','محال الحرف والهدايا داخل السوق'],
+  ['/images/mutrah-souq-khanjar.jpg','الخناجر الفضية العُمانية المعروضة في السوق'],
+  ['/images/muttrah-corniche.jpg','كورنيش مطرح والميناء بالقرب من السوق']
 ];
 
 const pageUrl = Astro.site ? new URL('/', Astro.site).toString() : undefined;
@@ -37,11 +43,13 @@ const faq = {
     ['هل دخول سوق مطرح مجاني؟','الدخول إلى السوق نفسه مجاني عادةً، وتكون التكاليف مرتبطة بالمشتريات أو الخدمات التي تختارها.'],
     ['ما أفضل وقت لزيارة سوق مطرح؟','الفترة من سبتمبر إلى مايو أكثر اعتدالاً وفق بوابة عُمان السياحية، ويمنح المساء السوق أجواءً مميزة بعد انخفاض الحرارة.'],
     ['كم أحتاج من الوقت داخل السوق؟','ساعة إلى ساعتين مناسبة لمعظم الزوار، ويمكن تمديد الزيارة مع جولة على كورنيش مطرح أو زيارة قلعة مطرح.'],
-    ['هل يمكن الدفع بالبطاقة؟','تختلف وسائل الدفع من متجر إلى آخر؛ من المفيد حمل بعض الريالات العُمانية للمشتريات الصغيرة مع السؤال عن وسيلة الدفع قبل الشراء.']
+    ['هل يمكن الدفع بالبطاقة؟','تختلف وسائل الدفع من متجر إلى آخر؛ من المفيد حمل بعض الريالات العُمانية للمشتريات الصغيرة مع السؤال عن وسيلة الدفع قبل الشراء.'],
+    ['هل توجد مرافق عامة ودورات مياه حول السوق؟','تتوفر في محيط الكورنيش وفي حي مطرح مرافق عامة ومواقف ومقاهٍ ومطاعم ومساجد وصرافات آلية على مسافة مشي قصيرة من السوق. لا يدرج هذا الدليل أسماء جهات محددة، ويتغير توفر الخدمات بمرور الوقت.'],
+    ['هل السوق مناسب للعائلات والأطفال؟','نعم، السوق والكورنيش المجاور مناسب للعائلات، لكن بعض الممرات تكون ضيقة ومزدحمة؛ زيارة الصباح أسهل للتنقل وأكثر هدوءاً. تحقّق من المرافق القريبة المناسبة لاحتياجك قبل التخطيط.']
   ].map(([name,text])=>({'@type':'Question',name,acceptedAnswer:{'@type':'Answer',text}}))
 };
 ---
-<BaseLayout title="سوق مطرح في مسقط | دليل الزيارة المستقل" description="دليل عربي مستقل لسوق مطرح في مسقط: الموقع، أوقات الزيارة، المواصلات، المواقف، الأطعمة القريبة، المعالم المجاورة، الأسئلة الشائعة والخريطة." image={hero} jsonLd={[touristAttraction,faq]}>
+<BaseLayout title="سوق مطرح في مسقط | دليل الزيارة المستقل" description="دليل عربي مستقل لسوق مطرح في مسقط: الموقع، التاريخ، أوقات الزيارة، المواصلات، المرافق والخدمات، الطقس والتوقعات، الأطعمة القريبة، المعالم المجاورة، الأسئلة الشائعة والخريطة." image={ogHero} jsonLd={[touristAttraction,faq]}>
   <section class="relative min-h-[86vh] overflow-hidden bg-[#18110d] pt-20 text-white">
     <img src={hero} alt="واجهة سوق مطرح في مسقط" class="absolute inset-0 h-full w-full object-cover opacity-48" fetchpriority="high" />
     <div class="absolute inset-0 bg-gradient-to-l from-[#18110d]/95 via-[#18110d]/65 to-[#18110d]/20"></div>
@@ -89,6 +97,8 @@ const faq = {
     </div>
   </section>
 
+  <HistorySection />
+
   <section id="visit" class="section">
     <div class="shell">
       <p class="kicker">خطط للزيارة</p>
@@ -126,6 +136,10 @@ const faq = {
     </div>
   </section>
 
+  <FacilitiesSection />
+
+  <WeatherSection />
+
   <section id="nearby" class="section">
     <div class="shell grid gap-12 lg:grid-cols-2">
       <div>
@@ -145,6 +159,8 @@ const faq = {
       </div>
     </div>
   </section>
+
+  <RouteSection />
 
   <section id="faq" class="bg-[#176b68] py-16 text-white">
     <div class="shell max-w-4xl">

@@ -8,7 +8,14 @@ const read = (p) => readFileSync(join(root,p),'utf8');
 for (const p of ['src/pages/index.astro','src/pages/privacy.astro','src/pages/terms.astro','src/pages/cookies.astro','astro.config.mjs','package.json','.node-version','wrangler.jsonc']) {
   if (!existsSync(join(root,p))) fail(`missing ${p}`);
 }
-if (existsSync(join(root,'pnpm-workspace.yaml'))) fail('single-package project must not contain pnpm-workspace.yaml');
+if (existsSync(join(root,'pnpm-workspace.yaml'))) {
+  // pnpm 11 hosts settings (e.g. allowBuilds) in pnpm-workspace.yaml.
+  // Allowed here ONLY as a settings file: it must not turn the repo into a
+  // multi-package workspace nor define catalogs.
+  const ws = readFileSync(join(root,'pnpm-workspace.yaml'),'utf8');
+  if (/^\s*packages\s*:/m.test(ws)) fail('pnpm-workspace.yaml must stay single-package (no packages:)');
+  if (/^\s*catalogu?e?s?\s*:/m.test(ws)) fail('pnpm-workspace.yaml must not define catalogs');
+}
 
 const pkg = JSON.parse(read('package.json'));
 for (const group of ['dependencies','devDependencies']) {

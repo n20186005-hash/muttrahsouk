@@ -14,7 +14,8 @@
     "build": "astro build && node scripts/verify-build.mjs",
     "preview": "astro preview",
     "deploy": "pnpm build && wrangler deploy",
-    "audit:source": "node scripts/verify-source.mjs"
+    "audit:source": "node scripts/verify-source.mjs",
+    "optimize:images": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/optimize-images.ps1"
   },
   "dependencies": {
     "@astrojs/cloudflare": "14.2.6",
