@@ -7,7 +7,8 @@ import RouteSection from '../components/RouteSection.astro';
 
 // نسخ محلية مضغوطة (الأصول والتراخيص موثقة في public/images/IMAGE_SOURCES.md)
 const hero = '/images/mutrah-souq-entrance.jpg';
-const ogHero = 'https://upload.wikimedia.org/wikipedia/commons/2/2b/%D9%88%D8%A7%D8%AC%D9%87%D8%A9_%D8%B3%D9%88%D9%82_%D9%85%D8%B7%D8%B1%D8%AD.jpg';
+// صورة احتياطية مطلقة تُستخدم فقط قبل ضبط النطاق في astro.config.mjs.
+const ogImageFallback = 'https://upload.wikimedia.org/wikipedia/commons/2/2b/%D9%88%D8%A7%D8%AC%D9%87%D8%A9_%D8%B3%D9%88%D9%82_%D9%85%D8%B7%D8%B1%D8%AD.jpg';
 const gallery = [
   ['/images/mutrah-souq-interior-01.jpg','ممرات سوق مطرح ومحال اللبان والتوابل'],
   ['/images/mutrah-souq-interior-02.jpg','محال الحرف والهدايا داخل السوق'],
@@ -16,14 +17,18 @@ const gallery = [
 ];
 
 const pageUrl = Astro.site ? new URL('/', Astro.site).toString() : undefined;
+// عند توفر النطاق تُستخدم نسخة الصورة المحلية برابط مطلق في وسوم OG وJSON-LD.
+const ogImage = pageUrl ? new URL(hero, pageUrl).toString() : ogImageFallback;
 
 const touristAttraction = {
   '@context':'https://schema.org',
   '@type':['TouristAttraction','LocalBusiness'],
+  '@id': pageUrl ? pageUrl + '#attraction' : undefined,
   name:'سوق مطرح',
   ...(pageUrl ? {url: pageUrl} : {}),
-  alternateName:['Mutrah Souq','Muttrah Souq'],
-  description:'سوق تاريخي تقليدي في مطرح بمحافظة مسقط، معروف بالممرات المتشابكة ومحال اللبان والتوابل والمنسوجات والفضيات والحرف العُمانية.',
+  image: ogImage ? [ogImage] : undefined,
+  alternateName:['Mutrah Souq','Muttrah Souq','سوق مطرح مسقط'],
+  description:'سوق تاريخي تقليدي في مطرح بمحافظة مسقط بسلطنة عُمان، معروف بممراته المتشابكة ومحال اللبان والتوابل والمنسوجات والفضيات والحرف العُمانية، ويقع على مقربة من كورنيش مطرح. يشمل هذا الدليل الموقع وخريطة الوصول وساعات الزيارة والمعالم المجاورة ونصائح النقل والطقس.',
   address:{'@type':'PostalAddress',streetAddress:'Mutrah Market, near Mutrah Corniche',addressLocality:'مطرح',addressRegion:'محافظة مسقط',addressCountry:'OM'},
   geo:{'@type':'GeoCoordinates',latitude:23.6204,longitude:58.5645},
   openingHoursSpecification:[{'@type':'OpeningHoursSpecification',dayOfWeek:['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],opens:'09:00',closes:'23:00'}],
@@ -49,7 +54,7 @@ const faq = {
   ].map(([name,text])=>({'@type':'Question',name,acceptedAnswer:{'@type':'Answer',text}}))
 };
 ---
-<BaseLayout title="سوق مطرح في مسقط | دليل الزيارة المستقل" description="دليل عربي مستقل لسوق مطرح في مسقط: الموقع، التاريخ، أوقات الزيارة، المواصلات، المرافق والخدمات، الطقس والتوقعات، الأطعمة القريبة، المعالم المجاورة، الأسئلة الشائعة والخريطة." image={ogHero} jsonLd={[touristAttraction,faq]}>
+<BaseLayout title="سوق مطرح (مسقط) | دليل الزيارة والموقع" description="دليل عربي مستقل لسوق مطرح في مسقط، عُمان: الموقع وخريطة الوصول، التاريخ، ساعات الزيارة، المعالم القريبة مثل كورنيش مطرح، المرافق، الطقس، الأسئلة الشائعة." image={ogImage} imageAlt="سوق مطرح — واجهة السوق الرئيسية في مطرح، مسقط، عُمان" jsonLd={[touristAttraction,faq]}>
   <section class="relative min-h-[86vh] overflow-hidden bg-[#18110d] pt-20 text-white">
     <img src={hero} alt="واجهة سوق مطرح في مسقط" class="absolute inset-0 h-full w-full object-cover opacity-48" fetchpriority="high" />
     <div class="absolute inset-0 bg-gradient-to-l from-[#18110d]/95 via-[#18110d]/65 to-[#18110d]/20"></div>
@@ -71,10 +76,11 @@ const faq = {
     <div class="shell grid gap-12 lg:grid-cols-[1.1fr_.9fr] lg:items-center">
       <div>
         <p class="kicker">سوق تاريخي حي</p>
+        <nav aria-label="التسلسل الجغرافي" class="mt-2 text-xs font-bold tracking-wide text-[#a08558]">سلطنة عُمان › محافظة مسقط › مطرح › <span class="text-[#4a2b1d]">سوق مطرح</span></nav>
         <h2 class="display mt-3 text-4xl font-black md:text-5xl">ليس معرضاً للتراث، بل سوق يعمل كل يوم</h2>
-        <p class="mt-6 text-lg text-[#58483e]">تصف بوابة عُمان السياحية الرسمية سوق مطرح بأنه سوق عربي تقليدي بمتاهة من الأزقة والمتاجر. هنا يمكن مشاهدة اللبان والبخور والعطور، المنسوجات، الأواني، التحف، المجوهرات الفضية والحرف العُمانية في مساحة تجارية ما زالت جزءاً من الحياة اليومية في مطرح.</p>
+        <p class="mt-6 text-lg text-[#58483e]">مرحباً بكم في <b class="text-[#18110d]">سوق مطرح</b>، السوق الذي تعرفه المصادر الدولية باسم <b class="text-[#18110d]">Mutrah Souq</b> أو <b class="text-[#18110d]">Muttrah Souq</b>، ويقع في حي مطرح قلب مدينة <b class="text-[#18110d]">مسقط</b> بمحافظة مسقط في سلطنة <b class="text-[#18110d]">عُمان</b> — على مقربة من كورنيش مطرح وقلعة مطرح. تصف بوابة عُمان السياحية الرسمية السوق بأنه سوق عربي تقليدي بمتاهة من الأزقة والمتاجر؛ هنا يمكن مشاهدة اللبان والبخور والعطور، المنسوجات، الأواني، التحف، المجوهرات الفضية والحرف العُمانية في مساحة تجارية ما زالت جزءاً من الحياة اليومية في مطرح، ويمكن دمجه بسهولة مع جولة على كورنيش مطرح ضمن استكشاف أوسع للمعالم القريبة.</p>
         <div class="mt-8 grid gap-4 sm:grid-cols-3">
-          <div class="card rounded-3xl p-5"><b class="block text-2xl text-[#176b68]">4.4 / 5</b><span class="text-sm text-[#66574e]">التقييم المزوّد على خرائط جوجل</span></div>
+          <div class="card rounded-3xl p-5"><b class="block text-2xl text-[#176b68]">4.4 / 5 · 30,121</b><span class="text-sm text-[#66574e]">التقييم وعدد التقييمات المزوّدة على خرائط جوجل</span></div>
           <div class="card rounded-3xl p-5"><b class="block text-2xl text-[#176b68]">09:00–23:00</b><span class="text-sm text-[#66574e]">ساعات التشغيل المزوّدة</span></div>
           <div class="card rounded-3xl p-5"><b class="block text-2xl text-[#176b68]">JHC7+5Q</b><span class="text-sm text-[#66574e]">رمز الموقع في مسقط</span></div>
         </div>

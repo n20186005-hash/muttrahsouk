@@ -32,7 +32,7 @@ if (!src.includes("'TouristAttraction'")) fail('TouristAttraction schema missing
 if (!src.includes("'LocalBusiness'")) fail('LocalBusiness schema missing');
 
 const config = read('astro.config.mjs');
-if (!config.includes("const SITE_URL = '';")) fail('single empty SITE_URL configuration point missing');
+if (!config.includes("const SITE_URL = 'https://muttrahsouk.com';")) fail('single configured SITE_URL point missing');
 if (!config.includes('integrations: site ? [sitemap()] : []')) fail('conditional sitemap configuration missing');
 
 const forbidden = [ ['example','.com'].join(''), ['local','host'].join(''), ['chrome-extension', '://'].join('') ];

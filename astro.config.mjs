@@ -3,8 +3,8 @@ import cloudflare from '@astrojs/cloudflare';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 
-// ضع النطاق الرسمي هنا بعد تسجيله، واتركه فارغاً قبل ذلك.
-const SITE_URL = '';
+// النطاق الرسمي للموقع؛ يُستخدم في توليد canonical وsitemap وروابط OG.
+const SITE_URL = 'https://muttrahsouk.com';
 const site = SITE_URL.trim() || undefined;
 
 export default defineConfig({
