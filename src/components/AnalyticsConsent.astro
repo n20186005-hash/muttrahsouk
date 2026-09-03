@@ -15,5 +15,7 @@
     gtag('js', new Date());
     gtag('config', GA_ID, { anonymize_ip: true });
   };
+  // يسمح لشريط الموافقة بتحميل أداة التحليل فور قبولها دون إعادة تحميل الصفحة.
+  window.addEventListener('consent-updated', loadAnalytics);
   loadAnalytics();
 </script>

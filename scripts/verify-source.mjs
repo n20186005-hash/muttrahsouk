@@ -1,7 +1,9 @@
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = new URL('../', import.meta.url).pathname;
+// fileURLToPath avoids a doubled drive prefix on Windows (pathname starts with "/C:/").
+const root = fileURLToPath(new URL('..', import.meta.url));
 const fail = (m) => { console.error(`SOURCE AUDIT FAILED: ${m}`); process.exitCode = 1; };
 const read = (p) => readFileSync(join(root,p),'utf8');
 

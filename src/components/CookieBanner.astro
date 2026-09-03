@@ -1,0 +1,29 @@
+<!-- شريط الموافقة على ملفات تعريف الارتباط: يظهر فقط قبل أول قرار من الزائر. -->
+<div id="cookie-banner" hidden class="fixed inset-x-0 bottom-0 z-50">
+  <div class="border-t border-[#F7F0DF]/10 bg-[#18110d] shadow-[0_-12px_40px_rgba(24,17,13,.35)]">
+    <div class="shell flex flex-col gap-4 px-4 py-5 sm:flex-row sm:items-center sm:justify-between">
+      <p class="max-w-3xl text-sm leading-relaxed text-[#F7F0DF]">نستخدم ملفات تعريف ارتباط تحليلية اختيارية لفهم استخدام الموقع بصورة مجمعة، ولا نحمّلها قبل موافقتك. يمكنك تغيير اختيارك في أي وقت من صفحة <a class="underline decoration-[#E2A52E] decoration-2 underline-offset-4 hover:text-white" href="/cookies/">إعدادات ملفات تعريف الارتباط</a>.</p>
+      <div class="flex shrink-0 flex-wrap items-center gap-2">
+        <button type="button" id="cookie-reject" class="rounded-full border border-white/40 px-5 py-2.5 text-sm font-bold text-[#F6D98C] hover:bg-white/10">الضرورية فقط</button>
+        <button type="button" id="cookie-accept" class="rounded-full bg-[#176b68] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#1a7d7a]">قبول ملفات التحليل</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script is:inline>
+  const KEY = 'mutrah-cookie-consent';
+  const banner = document.getElementById('cookie-banner');
+  if (banner && localStorage.getItem(KEY) === null) {
+    banner.hidden = false;
+    document.getElementById('cookie-reject')?.addEventListener('click', () => {
+      localStorage.setItem(KEY, 'necessary');
+      banner.hidden = true;
+    });
+    document.getElementById('cookie-accept')?.addEventListener('click', () => {
+      localStorage.setItem(KEY, 'analytics');
+      banner.hidden = true;
+      // تفرّغ AnalyticsConsent على هذا الحدث لتحميل أداة التحليل فوراً دون إعادة تحميل.
+      window.dispatchEvent(new Event('consent-updated'));
+    });
+  }
+</script>

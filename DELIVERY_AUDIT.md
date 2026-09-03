@@ -38,3 +38,12 @@
 - **PWA**: `site.webmanifest` اكتمل (id/start_url/scope/lang ar-OM/dir rtl/أيقونات 32/180/192/512)، ووُلّد `icon-192.png` و`icon-512.png` من أيقونة اللمس؛ أُنشئ `public/sw.js` (شبكة أولاً + بديل دون اتصال للصفحة الرئيسية) مع تسجيل تلقائي في `BaseLayout.astro`.
 - **التحقق**: `astro check` = 0 أخطاء (1 hint سابق لـ jsonLd)، `astro build` نجح (sitemap-index في dist/client)، والفحص المكافئ لـ verify-source/verify-build محلياً = AUDIT OK. النقطة القديمة «بقيت og على ويكيميديا» أصبحت لاغية: OG الآن على النسخة المحلية المطلقة بعد ضبط النطاق (رابط ويكيميديا احتياطي فقط).
 - ملاحظة: الأرقام (4.4 / 30,121 / 09:00–23:00 / +968 9827 7478 / JHC7+5Q / رابط الخريطة والـ embed) كلها محدّثة وفق أحدث بيانات المستخدم؛ مع بقاء الحاجة لمراجعة عربية نهائية من متحدث أصلي.
+
+## تحديث 2026-09-03 (إصلاحات ما بعد تدقيق الامتثال)
+- أُصلح خطأ مسار Windows في `verify-source.mjs` و`verify-build.mjs` (كانا يستخدمان `.pathname` فينتج مسار مزدوج `C:\C:\...` فيتعذر تشغيلهما على Windows). الاستبدال عبر `fileURLToPath(new URL('..', import.meta.url))`؛ تحقق فعلي على Windows: «Source audit passed.» و«Build audit passed.».
+- أُزيل تحذير jsonLd الوحيد في `astro check` بإضافة `is:inline` إلى وسم JSON-LD في `BaseLayout.astro`.
+- أُضيفت صفحة 404 مخصصة `src/pages/404.astro` (عربية موحدة مع هوية الموقع)؛ في وضع SSR ترجعها Astro تلقائياً للطرق غير المطابقة.
+- أُضيف شريط موافقة ملفات تعريف الارتباط `src/components/CookieBanner.astro`: يظهر فقط قبل أول قرار؛ «الضرورية فقط» يحفظ `necessary` و«قبول ملفات التحليل» يحفظ `analytics` ثم يطلق حدث `consent-updated` لتحميل GA4 فوراً دون إعادة تحميل الصفحة، مع رابط إلى `/cookies/` لإدارة تفصيلية.
+- `AnalyticsConsent.astro` يستمع الآن إلى `consent-updated` إضافة إلى الفحص عند التحميل (يبقى الافتراضي: لا تحميل بدون موافقة).
+- تنظيف: حُذفت ملفات مؤقتة (`devlog.txt`/`devlogerr.txt`/`devpage.html`) خلفتها تجربة خادم معاينة.
+- التحقق: `astro build` نجح، و`verify-build.mjs` بعد البناء = Build audit passed، وread_lints 0 خطأ في الملفات المعدلة. `astro check` لم يُعد تنفيذه هنا (تخطّي المستخدم) ويُنصح بتشغيله في CI.

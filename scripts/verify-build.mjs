@@ -1,6 +1,8 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, sep } from 'node:path';
-const root = new URL('../', import.meta.url).pathname;
+import { fileURLToPath } from 'node:url';
+// fileURLToPath avoids a doubled drive prefix on Windows (pathname starts with "/C:/").
+const root = fileURLToPath(new URL('..', import.meta.url));
 const dist = join(root,'dist');
 if (!existsSync(dist)) { console.error('BUILD AUDIT FAILED: dist missing'); process.exit(1); }
 const forbidden = [ ['example','.com'].join(''), ['local','host'].join(''), ['chrome-extension', '://'].join('') ];
