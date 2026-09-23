@@ -1,5 +1,5 @@
 ---
-// قسم الطقس — تُجلب البيانات من Open-Meteo (مفتوح، بلا مفتاح) على الخادم مع تخزين مؤقت
+// قسم الطقس — تُجلب البيانات عبر خدمة طقس على الخادم مع تخزين مؤقت
 // في Cloudflare: ذاكرة Cache API مشتركة + ذاكرة داخل العزل، والاسترجاع عند الفشل.
 
 const LAT = 23.6204;   // سوق مطرح، مسقط
@@ -15,7 +15,7 @@ api.searchParams.set(
 );
 api.searchParams.set(
   'daily',
-  'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max'
+  'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,uv_index_max'
 );
 api.searchParams.set('timezone', TZ);
 api.searchParams.set('forecast_days', '7');
@@ -39,6 +39,7 @@ interface DailyWeather {
   temperature_2m_min: number[];
   precipitation_probability_max: (number | null)[];
   wind_speed_10m_max: number[];
+  uv_index_max?: (number | null)[];
 }
 interface Forecast {
   current: CurrentWeather;
@@ -152,6 +153,106 @@ function shortTime(iso: string): string {
 const round = (n: number): number => Math.round(n);
 const isRainy = (c: number): boolean => [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99].includes(c);
 const isCloudy = (c: number): boolean => [1, 2, 3, 45, 48].includes(c);
+
+// يحوّل سرعة الرياح (كم/س) إلى مقياس بوفورت لربطها بنصائح الزيارة.
+function windLevel(kmh: number): number {
+  if (kmh < 1) return 0;
+  if (kmh < 6) return 1;
+  if (kmh < 12) return 2;
+  if (kmh < 20) return 3;
+  if (kmh < 29) return 4;
+  if (kmh < 39) return 5;
+  if (kmh < 50) return 6;
+  if (kmh < 62) return 7;
+  if (kmh < 75) return 8;
+  if (kmh < 89) return 9;
+  return 10;
+}
+
+// يبني نصائح زيارة قابلة للتنفيذ من بيانات الطقس مباشرة (لسوق مطرح: سوق مسقوف على الكورنيش).
+// لا يعرض سوى العناصر المطابقة للشروط؛ والتنبيه يظهر فقط عند ظروف جدية.
+function buildAdvice(cur: CurrentWeather, day: DailyWeather) {
+  const code = cur.weather_code;
+  const maxT = day.temperature_2m_max[0] ?? 0;
+  const minT = day.temperature_2m_min[0] ?? 0;
+  const rainProb = day.precipitation_probability_max[0] ?? 0;
+  const wind = day.wind_speed_10m_max[0] ?? 0;
+  const wl = windLevel(wind);
+  const uv = day.uv_index_max?.[0] ?? 0;
+  const rainy = isRainy(code);
+  const heavy = [65, 82, 95, 96, 99].includes(code);
+  const thunder = [95, 96, 99].includes(code);
+  const fog = [45, 48].includes(code);
+  const diff = maxT - minT;
+
+  const outfit: string[] = [];
+  const activity: string[] = [];
+  const items: string[] = [];
+  let risk: string | null = null;
+
+  if (rainProb >= 60) {
+    outfit.push('احتمال المطر مرتفع اليوم، ارتدِ ملابس عملية يسهل الحركة وتفضّل ما يقاوم الماء.');
+    activity.push('احتمال المطر كبير، فضّل التجول تحت سقف السوق المظلّل وأجّل الأنشطة البحرية المكشوفة.');
+    items.push('مظلة أو مطر غطاء خفيف');
+  }
+  if (rainy && !heavy) {
+    outfit.push('ثمّة مطر خفيف، اختر حذاءً غير زلق للمشي على الأرض الرطبة.');
+    activity.push('تجربة الأماكن المكشوفة أقل متعة اليوم؛ ركّز على أروقة السوق المسقوفة.');
+    items.push('مظلة قابلة للطي');
+  }
+  if (heavy) {
+    outfit.push('الأمطار غزيرة، ارتدِ معطفاً مقاوماً للماء.');
+    activity.push('لا يُنصح بالأنشطة البحرية المفتوحة؛ القوارب والتلفريك قد تتوقف، ويفضّل البقاء في المناطق المغطاة.');
+    items.push('مطر غطاء (مطرية)، وتجنّب المظلة الطويلة مع الرياح');
+  }
+  if (thunder) {
+    risk = 'تنبيه: رعد وبرق متوقّع — لا تصعد المرتفعات، ولا تقترب من البحر أو تقف تحت الأشجار؛ المشاريع المائية متوقّفة غالباً.';
+    activity.push('احذر البرق، وابتعد عن البحر والمرتفعات المكشوفة.');
+  }
+  if (maxT >= 32) {
+    outfit.push('الحرارة مرتفعة، ارتدِ ملابس خفيفة واسعة وتنفّسية.');
+    activity.push('تجنّب ذروة الظهيرة واختصر وقتك في الأماكن المكشوفة؛ الصباح الباكر أو المساء أكثر راحة.');
+    items.push('واقٍ شمسي، نظارة شمسية، ومياه كافية');
+  }
+  if (maxT <= 10) {
+    outfit.push('الحرارة منخفضة، تحسّب لمعطف سميك ووشاح للتدفئة.');
+    items.push('معطف سميك');
+  }
+  if (diff > 8) {
+    outfit.push('الفارق بين النهار والليل كبير، احمل طبقة إضافية تضيفها أو تزيلها بسهولة.');
+  }
+  if (uv >= 5) {
+    outfit.push('الأشعة فوق البنفسجية قوية، قبعة وملابس واقية مفيدة.');
+    activity.push('احمِ نفسك من الشمس في ساعات الذروة.');
+    items.push('واقٍ شمسي، نظارة شمسية، وقبعة');
+  }
+  if (wl >= 7) {
+    const msg = 'تنبيه: الرياح قوية — ابتعد عن اللوحات الإعلانية والصخور البحرية؛ المشاريع البحرية المفتوحة متوقّفة غالباً.';
+    risk = risk ? `${risk} ${msg}` : msg;
+    activity.push('المشاريع البحرية المفتوحة متوقّفة غالباً بسبب الرياح.');
+  } else if (wl >= 5) {
+    outfit.push('الرياح نشطة نسبياً وقد تطير قبعتك؛ لا تلبس ثوباً واسعاً يصعب التحكّم به.');
+    activity.push('القوارب السياحية وبعض الأنشطة المكشوفة قد تتوقف بسبب الرياح.');
+  }
+  if (fog) {
+    const msg = 'تنبيه: ضباب يحدّ من الرؤية — العبّارات والرحلات البحرية قد تتأخر، ولا تصلح مشاهدة البحر أو المرتفعات اليوم.';
+    risk = risk ? `${risk} كما ${msg}` : msg;
+    activity.push('الرؤية محدودة، فلا تصلح مشاهدة الكورنيش أو المرتفعات اليوم.');
+  }
+  if (!rainy && !fog && !thunder && (code === 0 || code === 1)) {
+    activity.push('الجو صحو ومناسب للتجول الخارجي ولقطة الغروب على الكورنيش.');
+    if (uv < 5) items.push('لا تنسَ واقٍ شمسي خفيف');
+  } else if (!rainy && !fog && (code === 2 || code === 3)) {
+    activity.push('الضوء ناعم ومناسب جداً للتصوير وللتجول الطويل في الهواء الطلق دون لهيب الشمس.');
+  }
+
+  if (outfit.length === 0 && activity.length === 0 && items.length === 0 && !risk) {
+    activity.push('الأحوال مستقرة ومناسبة لزيارة هادئة؛ خطّط وفق راحتك.');
+  }
+  return { risk, outfit, activity, items };
+}
+
+const advice = forecast ? buildAdvice(forecast.current, forecast.daily) : null;
 ---
 <section id="weather" class="bg-[#f1e3c4] py-16">
   <div class="shell">
@@ -182,6 +283,43 @@ const isCloudy = (c: number): boolean => [1, 2, 3, 45, 48].includes(c);
           </div>
         </div>
 
+        {advice ? (
+          <div class="rounded-[2rem] border border-[#B98739]/20 bg-[#fffaf0] p-6">
+            <p class="text-sm font-bold text-[#B98739]">نصائح عملية مبنية على الطقس</p>
+            {advice.risk && (
+              <div class="mt-4 rounded-2xl border border-[#b4231f]/30 bg-[#b4231f]/10 p-4 text-[#7a1814]">
+                <p class="font-black leading-7">{advice.risk}</p>
+              </div>
+            )}
+            <div class="mt-5 grid gap-4 md:grid-cols-3">
+              {advice.outfit.length > 0 && (
+                <div class="rounded-2xl border border-[#176b68]/15 bg-white/70 p-5">
+                  <p class="font-black text-[#176b68]">ما تلبس</p>
+                  <ul class="mt-3 space-y-2 text-sm text-[#58483e]">
+                    {advice.outfit.map((t) => <li class="flex gap-2"><span class="text-[#176b68]">•</span><span>{t}</span></li>)}
+                  </ul>
+                </div>
+              )}
+              {advice.activity.length > 0 && (
+                <div class="rounded-2xl border border-[#176b68]/15 bg-white/70 p-5">
+                  <p class="font-black text-[#176b68]">كيف ترتّب زيارتك</p>
+                  <ul class="mt-3 space-y-2 text-sm text-[#58483e]">
+                    {advice.activity.map((t) => <li class="flex gap-2"><span class="text-[#176b68]">•</span><span>{t}</span></li>)}
+                  </ul>
+                </div>
+              )}
+              {advice.items.length > 0 && (
+                <div class="rounded-2xl border border-[#B98739]/20 bg-white/70 p-5">
+                  <p class="font-black text-[#B98739]">أغراض تصطحبها</p>
+                  <ul class="mt-3 space-y-2 text-sm text-[#58483e]">
+                    {advice.items.map((t) => <li class="flex gap-2"><span class="text-[#B98739]">•</span><span>{t}</span></li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
+
         <div class="rounded-[2rem] border border-[#B98739]/20 bg-[#fffaf0] p-6">
           <p class="font-black text-[#18110d]">توقعات الأيام السبعة</p>
           <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
@@ -210,14 +348,14 @@ const isCloudy = (c: number): boolean => [1, 2, 3, 45, 48].includes(c);
             })}
           </div>
           <p class="mt-5 text-xs leading-6 text-[#66574e]">
-            بيانات الطقس استرشادية مقدمة من خدمة <a href="https://open-meteo.com" target="_blank" rel="noopener" class="font-bold text-[#176b68] underline">Open-Meteo</a> المفتوحة (دون مفتاح)، وتُخزَّن مؤقتاً على الخادم وتُحدَّث كل نحو 30 دقيقة. قد تختلف التوقعات؛ راجع مصادر الأرصاد المحلية قبل اتخاذ قرار يتعلق بخطة يومك.
+            البيانات استرشادية وتُحدَّث دورياً عبر الخادم؛ قد تختلف التوقعات فعلياً، لذا راجع مصادر الأرصاد المحلية قبل اتخاذ قرار يتعلق بخطة يومك.
           </p>
         </div>
       </div>
     ) : (
       <div class="mt-10 max-w-3xl rounded-[2rem] border border-[#B98739]/30 bg-[#fffaf0] p-8 text-[#58483e]">
         <p class="font-black text-[#18110d]">تعذر تحميل بيانات الطقس حالياً</p>
-        <p class="mt-2 text-sm">حدث خطأ مؤقت في جلب البيانات من الخدمة المفتوحة. أعد تحميل الصفحة لاحقاً، أو راجع تطبيقات الأرصاد المحلية خلال زيارتك.</p>
+        <p class="mt-2 text-sm">حدث خطأ مؤقت في جلب بيانات الطقس. أعد تحميل الصفحة لاحقاً، أو راجع تطبيقات الأرصاد المحلية خلال زيارتك.</p>
       </div>
     )}
   </div>

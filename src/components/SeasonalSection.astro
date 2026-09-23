@@ -1,0 +1,58 @@
+---
+// استراتيجية الزيارة حسب الفصول — مستندة إلى الخصائص المناخية المعتادة في مسقط.
+const rows = [
+  {
+    season: 'الشتاء (ديسمبر–فبراير)',
+    weather: 'الألطف على مدار السنة، نحو 20–26°م نهاراً، ورطوبة معتدلة.',
+    advice: 'أفضل فصل للزيارة: تجوّل مريح داخل الأزقة نهاراً، والكورنيش لطيف لاحقاً.',
+    note: 'ذروة الازدحام في عطل نهاية الأسبوع.',
+  },
+  {
+    season: 'الربيع (مارس–مايو)',
+    weather: 'دافئ يتزايد تدريجياً، بأمسيات لطيفة وحرارة معتدلة مبكراً.',
+    advice: 'زيارة الصباح أو العصر مريحة؛ احمل ماءً للتجول الطويل حين تدفأ الأرض.',
+    note: 'تتصاعد الحرارة مع اقتراب مايو.',
+  },
+  {
+    season: 'الصيف (يونيو–أغسطس)',
+    weather: 'حار جداً ورطب، غالباً فوق 40°م نهاراً، مع نسيم بحري مرطّب.',
+    advice: 'فضّل الصباح الباكر أو بعد المغرب؛ السوق مسقوف فيبقى الظل متاحاً، وتجنّب الجهد تحت الشمس.',
+    note: 'ساعات منتصف النهار هي الأقل ملاءمة.',
+  },
+  {
+    season: 'الخريف (سبتمبر–نوفمبر)',
+    weather: 'دافئ يتحوّل تدريجياً نحو الاعتدال، بأمسيات ألطف.',
+    advice: 'أمسيات سبتمبر–أكتوبر لطيفة للتجول والتصوير، وتنخفض الحرارة لاحقاً.',
+    note: 'راقب الندى والرطوبة المسائية.',
+  },
+];
+---
+<section id="season" class="bg-[#f1e3c4] py-16">
+  <div class="shell">
+    <p class="kicker">متى تزور</p>
+    <h2 class="display mt-3 max-w-3xl text-4xl font-black md:text-5xl">استراتيجية الزيارة حسب فصول مسقط</h2>
+    <p class="mt-4 max-w-3xl text-[#58483e]">مسقط ذات مناخ صحراوي حار، والأمطار نادرة على مدار العام. يستند الجدول إلى الخصائص المناخية المعتادة للمدينة عبر السنوات، لا إلى توقعات لحظية — فلا يغني عن مراجعة الطقس الفعلي قبل يومك.</p>
+    <div class="mt-10 overflow-x-auto rounded-[2rem] border border-[#B98739]/30 bg-[#fffaf0]">
+      <table class="w-full min-w-[640px] border-collapse text-right text-sm">
+        <thead class="bg-[#176b68] text-white">
+          <tr>
+            <th class="p-4 font-black">الفصل</th>
+            <th class="p-4 font-black">الطقس المتوقع</th>
+            <th class="p-4 font-black">نصيحة الزيارة</th>
+            <th class="p-4 font-black">ملاحظة</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr class:list={['border-t border-black/5', i % 2 === 1 && 'bg-[#f7f0df]']}>
+              <td class="p-4 align-top font-black text-[#18110d]">{r.season}</td>
+              <td class="p-4 align-top text-[#58483e]">{r.weather}</td>
+              <td class="p-4 align-top text-[#58483e]">{r.advice}</td>
+              <td class="p-4 align-top text-[#66574e]">{r.note}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

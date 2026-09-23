@@ -10,3 +10,9 @@ dist/
 # misc
 .DS_Store
 *.log
+
+# cloudflare workers secrets / env (never commit)
+.dev.vars
+.env
+.env.*
+.wrangler

@@ -1,0 +1,70 @@
+---
+// قسم المصادر المرجعية — يعزز إشارة E-E-A-T عبر ربط الموقع بجهات رسمية ومؤسسية معروفة.
+// المحتوى مستمد من SOURCES.md ولا يضيف أي ادعاءات غير موثّقة.
+const sources = [
+  {
+    label: 'وزارة التراث والسياحة — سوق مطرح',
+    org: 'تجربة عُمان (رسمي)',
+    url: 'https://experienceoman.om/destinations/muscat/mutrah-souq',
+    desc: 'الصفحة الرسمية للسوق ضمن بوابة السياحة العُمانية، مرجع للهوية والسياق الجغرافي.',
+  },
+  {
+    label: 'تجربة عُمان — مسقط',
+    org: 'تجربة عُمان (رسمي)',
+    url: 'https://experienceoman.om/destinations/muscat',
+    desc: 'نظرة أوسع على محافظة مسقط ووجهاتها، توضّح مكانة السوق ضمن منطقة مسقط.',
+  },
+  {
+    label: 'بلدية مسقط',
+    org: 'بلدية مسقط (رسمي)',
+    url: 'https://www.muscatmunicipality.gov.om/',
+    desc: 'المرجع البلدي لمطرح ومسقط، يفيد عند التحقق من الخدمات العامة والمرافق.',
+  },
+  {
+    label: 'خريطة الموقع (المالك)',
+    org: 'خرائط جوجل',
+    url: 'https://maps.app.goo.gl/i18WFNytBsRsd3YW8',
+    desc: 'رابط المشاركة الذي زوّده مالك المشروع لتثبيت الموقع والإحداثيات.',
+  },
+  {
+    label: 'ويكي بيانات — سوق مطرح',
+    org: 'Wikidata',
+    url: 'https://www.wikidata.org/wiki/Q87834530',
+    desc: 'عقدة الكيان الموثّقة في قاعدة المعرفة المفتوحة، تثبّت الهوية في محركات البحث.',
+  },
+  {
+    label: 'ويكيميديا كومنز — تصنيف السوق',
+    org: 'Wikimedia Commons',
+    url: 'https://commons.wikimedia.org/wiki/Category:Muttrah_souq',
+    desc: 'مصدر صور الملك العام/المرخّص المستخدمة في الموقع، مع تفاصيل الاعتماد في IMAGE_SOURCES.md.',
+  },
+];
+---
+<section id="sources" class="section">
+  <div class="shell">
+    <div class="flex items-end justify-between gap-5">
+      <div>
+        <p class="kicker">المصادر والمراجع</p>
+        <h2 class="display mt-3 max-w-3xl text-4xl font-black md:text-5xl">من أين استُقيت معلومات هذا الدليل</h2>
+      </div>
+      <p class="hidden max-w-md text-sm text-[#58483e] md:block">روابط رسمية ومؤسسية تثبّت هوية المكان وسياقه، لزيادة الموثوقية دون أي توصية تجارية.</p>
+    </div>
+
+    <div class="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+      {sources.map((s) => (
+        <article class="card flex flex-col rounded-3xl p-6">
+          <p class="text-xs font-bold tracking-wide text-[#176b68]">{s.org}</p>
+          <h3 class="mt-2 text-lg font-black leading-7">
+            <a href={s.url} target="_blank" rel="noopener noreferrer" class="text-[#18110d] underline decoration-[#B98739]/50 underline-offset-4 hover:text-[#176b68]">{s.label}</a>
+          </h3>
+          <p class="mt-2 flex-1 text-sm text-[#66574e]">{s.desc}</p>
+          <p class="mt-3 truncate text-xs text-[#a08558]" dir="ltr">{s.url}</p>
+        </article>
+      ))}
+    </div>
+
+    <p class="mt-6 rounded-2xl border border-[#B98739]/30 bg-[#fffaf0] p-4 text-sm text-[#66574e]">
+      <b class="text-[#18110d]">ملاحظة التحقق:</b> تُستخدم المصادر الرسمية لتثبيت هوية المكان وسياقه الجغرافي، بينما تُعامل ساعات العمل والأسعار والمواقف ووسائل النقل كبيانات قابلة للتغيير. يُنصح بالتحقق من القنوات الرسمية وخرائط جوجل قبل الزيارة، خصوصاً في العطلات والمناسبات.
+    </p>
+  </div>
+</section>

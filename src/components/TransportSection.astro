@@ -1,0 +1,49 @@
+---
+// قسم المواصلات المفصّل — مطار/نقل عام/أجرة/سيارة/مشي، دون ذكر أسماء تجارية.
+const embedSrc = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d6501.9319845401915!2d58.56192507714195!3d23.62040177875944!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e91f78583a8b82f%3A0x14ead28d3c8b5dc0!2sMutrah%20Souq!5e1!3m2!1sar!2som!4v1788187915378!5m2!1sar!2som';
+const modes = [
+  {
+    title: 'من مطار مسقط الدولي (MCT)',
+    body: 'يبعد المطار نحو 30 كلم عن حي مطرح. أسهل خيار هو سيارة الأجرة أو تطبيق التوصيل من أمام صالة الوصول مباشرةً إلى سوق مطرح قرب كورنيش مطرح (نحو 30–45 دقيقة حسب الزحام). ويمكن أيضاً مراجعة خطوط الحافلات الوطنية الحالية إن رغبت بوسيلة أوفر، ثم إكمال المشي من أقرب محطة مناسبة.',
+  },
+  {
+    title: 'بالمواصلات العامة',
+    body: 'تشغّل جهة النقل الوطنية خطوط حافلات تخدم مسقط ومطرح؛ راجع الجداول والمحطات الحالية وانزل عند أقرب محطة لمطرح، ثم امشِ بضع دقائق نحو الكورنيش والسوق. تختلف المواعيد فتحقّق منها قبل التحرك.',
+  },
+  {
+    title: 'بسيارة الأجرة وتطبيقات التوصيل',
+    body: 'الخيار الأسهل إن كنت داخل مسقط: اطلب التوجه إلى «سوق مطرح قرب كورنيش مطرح». حدّد الوجهة بوضوح لتجنّب أي التباس مع أحياء مسقط الأخرى، واتفق على السعر أو تأكّد من العدّاد قبل الانطلاق عند الإمكان.',
+  },
+  {
+    title: 'بالسيارة الخاصة',
+    body: 'اتبع اتجاهات «كورنيش مطرح» ثم المواقف العامة المتاحة على جانبي الكورنيش والشوارع المحيطة. لا تعتمد على موقف ملاصق لمدخل السوق في أوقات الذروة، وابدأ مبكراً في العطل والمناسبات.',
+  },
+  {
+    title: 'سيراً على الأقدام',
+    body: 'إن كنت على كورنيش مطرح فالسوق جزء طبيعي من جولة الواجهة البحرية، ويمكن دمجه بسهولة مع القلعة والميناء ضمن مسار مشي واحد دون حاجة لوسيلة نقل.',
+  },
+];
+---
+<section id="transport" class="section">
+  <div class="shell grid gap-12 lg:grid-cols-2">
+    <div>
+      <p class="kicker">الوصول من كل مكان</p>
+      <h2 class="display mt-3 max-w-3xl text-4xl font-black md:text-5xl">كيف تصل إلى سوق مطرح من المطار ومسقط</h2>
+      <div class="mt-8 space-y-5 text-[#58483e]">
+        {modes.map((m) => (
+          <div>
+            <p class="font-black text-[#18110d]">{m.title}</p>
+            <p class="mt-1 text-sm leading-7">{m.body}</p>
+          </div>
+        ))}
+      </div>
+      <div class="mt-7 flex flex-wrap gap-3 text-sm font-bold">
+        <a href="https://experienceoman.om/destinations/muscat/mutrah-souq" target="_blank" rel="noopener" class="rounded-full bg-[#176b68] px-5 py-2.5 text-white">وزارة التراث والسياحة — سوق مطرح</a>
+        <a href="https://www.muscatmunicipality.gov.om/" target="_blank" rel="noopener" class="rounded-full border border-[#176b68] px-5 py-2.5 text-[#176b68]">بلدية مسقط</a>
+      </div>
+    </div>
+    <div class="overflow-hidden rounded-[2rem] border-4 border-white shadow-xl">
+      <iframe src={embedSrc} width="600" height="450" style="border:0;width:100%;min-height:470px" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin" title="خريطة سوق مطرح"></iframe>
+    </div>
+  </div>
+</section>

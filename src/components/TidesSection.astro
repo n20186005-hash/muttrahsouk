@@ -1,0 +1,229 @@
+---
+// قسم المد والجزر — تُجلب بيانات البحر عبر خدمة على الخادم مع تخزين مؤقت.
+// سوق مطرح يطل مباشرة على الكورنيش، فمعرفة المد والجزر تساعد الزائر على اختيار وقت التجول قرب الماء.
+
+const LAT = 23.6204;   // سوق مطرح، مسقط
+const LON = 58.5645;
+const TZ = 'Asia/Muscat';
+
+const mApi = new URL('https://marine-api.open-meteo.com/v1/marine');
+mApi.searchParams.set('latitude', String(LAT));
+mApi.searchParams.set('longitude', String(LON));
+mApi.searchParams.set('hourly', 'sea_level_height_msl,wave_height,sea_surface_temperature');
+mApi.searchParams.set('timezone', TZ);
+mApi.searchParams.set('forecast_days', '2');
+const mApiUrl = mApi.toString();
+const TTL_MS = 30 * 60 * 1000; // 30 دقيقة
+
+interface Marine {
+  hourly: {
+    time: string[];
+    sea_level_height_msl: (number | null)[];
+    wave_height: (number | null)[];
+    sea_surface_temperature: (number | null)[];
+  };
+}
+
+const memory = new Map<string, { at: number; data: Marine | null }>();
+
+async function fetchMarine(): Promise<Marine | null> {
+  const now = Date.now();
+  const cached = memory.get(mApiUrl);
+  if (cached && now - cached.at < TTL_MS) return cached.data;
+
+  let cfCache: Cache | undefined;
+  try {
+    cfCache = (globalThis as unknown as { caches?: { default?: Cache } }).caches?.default;
+  } catch {
+    cfCache = undefined;
+  }
+
+  try {
+    if (cfCache) {
+      const hit = await cfCache.match(new Request(mApiUrl));
+      if (hit && hit.ok) {
+        const data = (await hit.json()) as Marine;
+        memory.set(mApiUrl, { at: now, data });
+        return data;
+      }
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 9000);
+    try {
+      const res = await fetch(mApiUrl, {
+        headers: { accept: 'application/json' },
+        signal: controller.signal,
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as Marine;
+      memory.set(mApiUrl, { at: now, data });
+      if (cfCache) {
+        const ttl = Math.round(TTL_MS / 1000);
+        const cachedRes = new Response(JSON.stringify(data), {
+          headers: { 'Cache-Control': `public, max-age=${ttl}` },
+        });
+        void cfCache.put(new Request(mApiUrl), cachedRes).catch(() => undefined);
+      }
+      return data;
+    } finally {
+      clearTimeout(timer);
+    }
+  } catch {
+    return null;
+  }
+}
+
+const marine = await fetchMarine();
+
+function nearestIndex(times: string[]): number {
+  const now = Date.now();
+  let best = 0;
+  let bestDiff = Infinity;
+  for (let i = 0; i < times.length; i++) {
+    const diff = Math.abs(new Date(times[i]).getTime() - now);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      best = i;
+    }
+  }
+  return best;
+}
+
+function fmtTime(iso: string): string {
+  try {
+    return new Intl.DateTimeFormat('ar-OM', { hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
+  } catch {
+    return '';
+  }
+}
+
+interface TideExt {
+  type: 'high' | 'low';
+  time: number;
+  height: number;
+}
+
+function findNextTides(times: string[], heights: (number | null)[]): { high: TideExt | null; low: TideExt | null } {
+  const now = Date.now();
+  const ext: TideExt[] = [];
+  for (let i = 1; i < heights.length - 1; i++) {
+    const h = heights[i];
+    if (h == null) continue;
+    const p = heights[i - 1];
+    const n = heights[i + 1];
+    if (p == null || n == null) continue;
+    if (h > p && h >= n) ext.push({ type: 'high', time: new Date(times[i]).getTime(), height: h });
+    else if (h < p && h <= n) ext.push({ type: 'low', time: new Date(times[i]).getTime(), height: h });
+  }
+  // فلترة لتجنّب القمم الوهمية: فاصل لا يقل عن 3 ساعات
+  const filt: TideExt[] = [];
+  let last = -Infinity;
+  for (const e of ext) {
+    if (e.time - last >= 3 * 3600 * 1000) {
+      filt.push(e);
+      last = e.time;
+    }
+  }
+  const high = filt.filter((e) => e.type === 'high' && e.time >= now).sort((a, b) => a.time - b.time)[0] ?? null;
+  const low = filt.filter((e) => e.type === 'low' && e.time >= now).sort((a, b) => a.time - b.time)[0] ?? null;
+  return { high, low };
+}
+
+let tideNow: number | null = null;
+let waveNow: number | null = null;
+let sstNow: number | null = null;
+let nextHigh: TideExt | null = null;
+let nextLow: TideExt | null = null;
+
+if (marine) {
+  const i = nearestIndex(marine.hourly.time);
+  tideNow = marine.hourly.sea_level_height_msl[i] ?? null;
+  waveNow = marine.hourly.wave_height[i] ?? null;
+  sstNow = marine.hourly.sea_surface_temperature[i] ?? null;
+  const found = findNextTides(marine.hourly.time, marine.hourly.sea_level_height_msl);
+  nextHigh = found.high;
+  nextLow = found.low;
+}
+
+const rising = !!nextHigh && (!nextLow || nextHigh.time < nextLow.time);
+
+const tideTips: string[] = [];
+if (waveNow != null) {
+  if (waveNow >= 2.5) {
+    tideTips.push('الموج مرتفع وخطِر: لا تنزل إلى البحر ولا تقف فوق الصخور البحرية.');
+  } else if (waveNow >= 1.5) {
+    tideTips.push('الموج متوسط؛ لا يُنصح بالسباحة قرب الصخور، كن حذراً من التيار.');
+  } else {
+    tideTips.push('الموج هادئ نسبياً، لكن راقب التيار وابتعد عن فوهات التصريف على الكورنيش.');
+  }
+}
+if (nextLow) {
+  tideTips.push(`عند الجزر قرب ${fmtTime(new Date(nextLow.time).toISOString())} تظهر الصخور والشاطئ الضحل — فرصة لمشاهدة الحافة، لكن الأرض زلقة.`);
+}
+if (nextHigh) {
+  tideTips.push(`عند المد قرب ${fmtTime(new Date(nextHigh.time).toISOString())} ترتفع المياه وتغمر الصخور — لا تقف فوق الصخور البحرية.`);
+}
+tideTips.push('ارتدِ أحذية مقاومة للانزلاق عند الاقتراب من الماء، واحرص على مراقبة الأطفال باستمرار.');
+---
+
+<section id="tides" class="bg-[#e9f1ef] py-16">
+  <div class="shell">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="kicker">البحر بجانب السوق</p>
+        <h2 class="display mt-3 text-4xl font-black md:text-5xl">متى يظهر الشاطئ والصخور؟</h2>
+      </div>
+      <p class="max-w-md text-sm text-[#3f5d58]">سوق مطرح يطل مباشرة على الكورنيش؛ معرفة مواعيد المد والجزر تساعدك على اختيار وقت التجول عند الحافة ومتى تحذر من ارتفاع الموج.</p>
+    </div>
+
+    {marine ? (
+      <div class="mt-10 space-y-6">
+        <div class="rounded-[2rem] bg-[#176b68] p-7 text-white">
+          <div class="grid items-center gap-8 md:grid-cols-[auto_1fr]">
+            <div>
+              <p class="text-sm font-bold text-[#F6D98C]">ارتفاع المد الآن</p>
+              <p class="mt-1 text-6xl font-black leading-none">{tideNow != null ? tideNow.toFixed(1) : '—'}<span class="text-2xl"> م</span></p>
+              <p class="mt-2 text-sm font-bold">{rising ? 'المياه في ارتفاع نحو المد' : 'المياه في انحسار نحو الجزر'}</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
+              <div class="rounded-2xl bg-white/12 px-3 py-4"><p class="text-xs text-[#d8eee9]">الموج</p><p class="mt-1 text-xl font-black">{waveNow != null ? waveNow.toFixed(1) : '—'}<span class="text-sm"> م</span></p></div>
+              <div class="rounded-2xl bg-white/12 px-3 py-4"><p class="text-xs text-[#d8eee9]">حرارة الماء</p><p class="mt-1 text-xl font-black">{sstNow != null ? Math.round(sstNow) : '—'}<span class="text-sm">°م</span></p></div>
+              <div class="rounded-2xl bg-white/12 px-3 py-4"><p class="text-xs text-[#d8eee9]">المد القادم</p><p class="mt-1 text-xl font-black">{nextHigh ? fmtTime(new Date(nextHigh.time).toISOString()) : '—'}</p></div>
+              <div class="rounded-2xl bg-white/12 px-3 py-4"><p class="text-xs text-[#d8eee9]">الجزر القادم</p><p class="mt-1 text-xl font-black">{nextLow ? fmtTime(new Date(nextLow.time).toISOString()) : '—'}</p></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-[2rem] border border-[#176b68]/20 bg-[#fffaf0] p-6">
+          <p class="font-black text-[#18110d]">أوقات المد والجزر القادمة</p>
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div class="rounded-2xl border border-[#176b68]/15 bg-[#176b68]/5 p-5">
+              <p class="text-sm font-black text-[#176b68]">المد (ارتفاع)</p>
+              <p class="mt-2 text-2xl font-black text-[#18110d]">{nextHigh ? fmtTime(new Date(nextHigh.time).toISOString()) : '—'}</p>
+              <p class="mt-1 text-sm text-[#58483e]">{nextHigh ? `ارتفاع تقريبي ${nextHigh.height.toFixed(1)} م` : 'غير متوفر ضمن النطاق'}</p>
+            </div>
+            <div class="rounded-2xl border border-[#B98739]/20 bg-[#B98739]/5 p-5">
+              <p class="text-sm font-black text-[#B98739]">الجزر (انحسار)</p>
+              <p class="mt-2 text-2xl font-black text-[#18110d]">{nextLow ? fmtTime(new Date(nextLow.time).toISOString()) : '—'}</p>
+              <p class="mt-1 text-sm text-[#58483e]">{nextLow ? `انحسار تقريبي ${nextLow.height.toFixed(1)} م` : 'غير متوفر ضمن النطاق'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-[2rem] border border-[#B98739]/20 bg-[#fffaf0] p-6">
+          <p class="font-black text-[#18110d]">نصائح للسلامة عند البحر</p>
+          <ul class="mt-4 space-y-3 text-sm text-[#58483e]">
+            {tideTips.map((t) => (
+              <li class="flex gap-2"><span class="text-[#176b68]">•</span><span>{t}</span></li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    ) : (
+      <div class="mt-10 max-w-3xl rounded-[2rem] border border-[#176b68]/30 bg-[#fffaf0] p-8 text-[#3f5d58]">
+        <p class="font-black text-[#18110d]">تعذر تحميل بيانات المد والجزر حالياً</p>
+        <p class="mt-2 text-sm">حدث خطأ مؤقت في جلب بيانات البحر. أعد تحميل الصفحة لاحقاً، أو راقب البحر مباشرة من الكورنيش خلال زيارتك.</p>
+      </div>
+    )}
+  </div>
+</section>

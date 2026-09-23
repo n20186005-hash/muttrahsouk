@@ -1,0 +1,3 @@
+# إعادة توجيه www إلى النطاق الأساسي (توحيد الكانونيكال)
+# HTTPS مفروض عبر إعداد «Always Use HTTPS» في Cloudflare.
+https://www.muttrahsouk.com/* https://muttrahsouk.com/:splat 301

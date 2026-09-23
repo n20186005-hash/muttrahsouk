@@ -30,6 +30,8 @@ const ogImage = image ? (site && image.startsWith('/') ? absolute(image) : image
     {noindex && <meta name="robots" content="noindex,follow" />}
     <title>{title}</title>
     {canonical && <link rel="canonical" href={canonical} />}
+    {canonical && <link rel="alternate" hreflang="ar" href={canonical} />}
+    {canonical && <link rel="alternate" hreflang="x-default" href={canonical} />}
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="ar_OM" />
     <meta property="og:title" content={title} />
