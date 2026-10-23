@@ -1,4 +1,5 @@
 ---
+import BidiText from '../components/BidiText.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HistorySection from '../components/HistorySection.astro';
 import FacilitiesSection from '../components/FacilitiesSection.astro';
@@ -15,6 +16,7 @@ import ResponsibilitySection from '../components/ResponsibilitySection.astro';
 const hero = '/images/mutrah-souq-entrance.jpg';
 // صورة احتياطية مطلقة تُستخدم فقط قبل ضبط النطاق في astro.config.mjs.
 const ogImageFallback = 'https://upload.wikimedia.org/wikipedia/commons/2/2b/%D9%88%D8%A7%D8%AC%D9%87%D8%A9_%D8%B3%D9%88%D9%82_%D9%85%D8%B7%D8%B1%D8%AD.jpg';
+const photoCredits = [["Mohammad hajeer", "https://commons.wikimedia.org/wiki/File:Souq_Muttrah_9.jpg", "CC BY 4.0", "https://creativecommons.org/licenses/by/4.0/"], ["Mohammad hajeer", "https://commons.wikimedia.org/wiki/File:Souq_Muttrah_8.jpg", "CC BY 4.0", "https://creativecommons.org/licenses/by/4.0/"], ["Keirn", "https://commons.wikimedia.org/wiki/File:Muscat_Souk_(9).jpg", "CC BY-SA 2.0", "https://creativecommons.org/licenses/by-sa/2.0/"], ["Muiad123", "https://commons.wikimedia.org/wiki/File:Muttrah_corniche.jpg", "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0/"]];
 const gallery = [
   ['/images/mutrah-souq-interior-01.jpg','ممرات سوق مطرح ومحال اللبان والتوابل'],
   ['/images/mutrah-souq-interior-02.jpg','محال الحرف والهدايا داخل السوق'],
@@ -28,7 +30,7 @@ const ogImage = pageUrl ? new URL(hero, pageUrl).toString() : ogImageFallback;
 
 const touristAttraction = {
   '@context':'https://schema.org',
-  '@type':['TouristAttraction','LocalBusiness'],
+  '@type':'TouristAttraction',
   '@id': pageUrl ? pageUrl + '#attraction' : undefined,
   name:'سوق مطرح',
   ...(pageUrl ? {url: pageUrl} : {}),
@@ -36,32 +38,27 @@ const touristAttraction = {
   alternateName:['Mutrah Souq','Muttrah Souq','سوق مطرح مسقط'],
   description:'سوق تاريخي تقليدي في مطرح بمحافظة مسقط بسلطنة عُمان، معروف بممراته المتشابكة ومحال اللبان والتوابل والمنسوجات والفضيات والحرف العُمانية، ويقع على مقربة من كورنيش مطرح. يشمل هذا الدليل الموقع وخريطة الوصول وساعات الزيارة والمعالم المجاورة ونصائح النقل والطقس.',
   address:{'@type':'PostalAddress',streetAddress:'Mutrah Market, near Mutrah Corniche',addressLocality:'مطرح',addressRegion:'محافظة مسقط',addressCountry:'OM'},
-  geo:{'@type':'GeoCoordinates',latitude:23.6204,longitude:58.5645},
-  openingHoursSpecification:[{'@type':'OpeningHoursSpecification',dayOfWeek:['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],opens:'09:00',closes:'23:00'}],
-  aggregateRating:{'@type':'AggregateRating',ratingValue:'4.4',reviewCount:'30218',bestRating:'5'},
-  telephone:'+968 9827 7478',
-  isAccessibleForFree:true,
+  geo:{'@type':'GeoCoordinates',latitude:23.6204018,longitude:58.5645},
   sameAs:[
     'https://experienceoman.om/destinations/muscat/mutrah-souq',
     'https://maps.app.goo.gl/i18WFNytBsRsd3YW8',
-    'https://commons.wikimedia.org/wiki/Category:Muttrah_souq',
-    'https://www.wikidata.org/wiki/Q87834530'
+    'https://www.mm.gov.om/ar/NewNewsDetails.aspx?MID=59&MoID=1&NID=1903'
   ]
 };
 const faq = {
   '@context':'https://schema.org','@type':'FAQPage',
   mainEntity:[
-    ['هل دخول سوق مطرح مجاني؟','الدخول إلى السوق نفسه مجاني عادةً، وتكون التكاليف مرتبطة بالمشتريات أو الخدمات التي تختارها.'],
+    ['هل دخول سوق مطرح مجاني؟','لا تنشر المصادر الرسمية التي قرأناها تعريفة دخول للسوق. أسعار الجولات المعلنة في منصات الحجز تخص الجولات، وليست دليلاً على رسم دخول. اسأل عن أي خدمة مدفوعة قبل قبولها.'],
     ['ما أفضل وقت لزيارة سوق مطرح؟','الفترة من سبتمبر إلى مايو أكثر اعتدالاً وفق بوابة عُمان السياحية، ويمنح المساء السوق أجواءً مميزة بعد انخفاض الحرارة.'],
     ['كم أحتاج من الوقت داخل السوق؟','ساعة إلى ساعتين مناسبة لمعظم الزوار، ويمكن تمديد الزيارة مع جولة على كورنيش مطرح أو زيارة قلعة مطرح.'],
     ['هل يمكن الدفع بالبطاقة؟','تختلف وسائل الدفع من متجر إلى آخر؛ من المفيد حمل بعض الريالات العُمانية للمشتريات الصغيرة مع السؤال عن وسيلة الدفع قبل الشراء.'],
-    ['هل توجد مرافق عامة ودورات مياه حول السوق؟','تتوفر في محيط الكورنيش وفي حي مطرح مرافق عامة ومواقف ومقاهٍ ومطاعم ومساجد وصرافات آلية على مسافة مشي قصيرة من السوق. لا يدرج هذا الدليل أسماء جهات محددة، ويتغير توفر الخدمات بمرور الوقت.'],
+    ['هل توجد مرافق عامة ودورات مياه حول السوق؟','تذكر بلدية مسقط تطوير دورات مياه عند مدخل السوق من الطريق البحري؛ هذه إفادة عن أعمال تطوير وليست ضماناً لساعات التشغيل أو الإتاحة الحالية. اسأل عند المدخل عن المرافق التي تحتاجها.'],
     ['هل السوق مناسب للعائلات والأطفال؟','نعم، السوق والكورنيش المجاور مناسب للعائلات، لكن بعض الممرات تكون ضيقة ومزدحمة؛ زيارة الصباح أسهل للتنقل وأكثر هدوءاً. تحقّق من المرافق القريبة المناسبة لاحتياجك قبل التخطيط.'],
-    ['كيف أصل من مطار مسقط الدولي إلى سوق مطرح؟','أسرع طريق هو سيارة الأجرة أو تطبيق التوصيل من صالة الوصول مباشرةً إلى سوق مطرح قرب كورنيش مطرح، وتستغرق الرحلة نحو 30–45 دقيقة حسب الزحام؛ ويمكن أيضاً مراجعة خطوط الحافلات الوطنية ثم إكمال المشي من أقرب محطة.'],
+    ['كيف أصل من مطار مسقط الدولي إلى سوق مطرح؟','أسرع طريق هو سيارة الأجرة أو تطبيق التوصيل من صالة الوصول مباشرةً إلى سوق مطرح قرب كورنيش مطرح، وتختلف مدة الرحلة بحسب الطريق والزحام؛ ويمكن أيضاً مراجعة خطوط الحافلات الوطنية ثم إكمال المشي من أقرب محطة.'],
     ['ما أفضل فصل لزيارة السوق؟','الشتاء (ديسمبر–فبراير) هو الألطف والأكثر راحة للتجول، يليه الخريف والربيع؛ أما الصيف فيكون حاراً ورطباً فيُفضَّل زيارته صباحاً أو مساءً. راجع قسم استراتيجية الفصول لمزيد من التفصيل.'],
-    ['ما هي ساعات عمل سوق مطرح؟','يفتح السوق عادةً صباحاً ويمتد حتى المساء؛ راجع قسم «خطط للزيارة» لأوقات الفتح والإغلاق المحدّثة قبل زيارتك، إذ قد تختلف في المناسبات والأعياد.'],
-    ['أين يقع سوق مطرح؟','يقع السوق في حي مطرح على مقربة من كورنيش مطرح في محافظة مسقط بسلطنة عُمان، ورمز الموقع Plus Code هو JHC7+5Q مطرح.'],
-    ['أين أجد مواقف السيارات قرب سوق مطرح؟','تتوفر مواقف عامة على طول الكورنيش وعند مداخل حي مطرح على مسافة مشي قصيرة من السوق؛ قد تكتظ في عطلة نهاية الأسبوع فتفضّل الصباح أو استخدم تطبيق توصيل.'],
+    ['ما هي ساعات عمل سوق مطرح؟','لقطة خرائط جوجل في 23 أكتوبر 2026 تسرد الجمعة 16:00–22:00، والسبت إلى الخميس 09:00–23:00. هذه ساعات قائمة المكان وليست ضماناً لفتح كل متجر؛ تحقق قبل الانطلاق خاصة يوم الجمعة والعطلات.'],
+    ['أين يقع سوق مطرح؟','يقع السوق في حي مطرح على مقربة من كورنيش مطرح في محافظة مسقط بسلطنة عُمان، وبالقرب من الواجهة البحرية. استخدم رابط الخريطة لتحديد المدخل المقصود.'],
+    ['أين أجد مواقف السيارات قرب سوق مطرح؟','ابحث عن المواقف المسموح بها في منطقة الكورنيش، واتبع اللوحات وشروط الدفع المحلية. لا يضمن هذا الدليل مكاناً متاحاً أو سعراً؛ خصص وقتاً للبحث ولا تتوقف أمام المداخل.'],
     ['ماذا تشتري من سوق مطرح؟','أشهر ما يميز السوق: اللبان العُماني والبخور، التوابل، الأقمشة، الفضيات، الخنجر العُماني (الخنجر)، والمصنوعات اليدوية المحلية.'],
     ['ما أشهر المعالم قرب سوق مطرح؟','على بُعد خطوات من السوق تجد كورنيش مطرح والميناء، وقريباً منه قلعة مطرح؛ ويمكن دمجها كلها في جولة واحدة.']
   ].map(([name,text])=>({'@type':'Question',name,acceptedAnswer:{'@type':'Answer',text}}))
@@ -85,6 +82,8 @@ const faq = {
     </div>
   </section>
 
+  <p class="shell py-3 text-xs">صورة الواجهة: <a class="underline" href="https://commons.wikimedia.org/wiki/File:واجهة_سوق_مطرح.jpg">Sara K</a> · <a class="underline" href="https://creativecommons.org/licenses/by/2.0/">CC BY 2.0</a> · تصغير/ضغط وقص عرض</p>
+
   <section id="about" class="section">
     <div class="shell grid gap-12 lg:grid-cols-[1.1fr_.9fr] lg:items-center">
       <div>
@@ -93,13 +92,14 @@ const faq = {
         <h2 class="display mt-3 text-4xl font-black md:text-5xl">ليس معرضاً للتراث، بل سوق يعمل كل يوم</h2>
         <p class="mt-6 text-lg text-[#58483e]">مرحباً بكم في <b class="text-[#18110d]">سوق مطرح</b>، السوق الذي تعرفه المصادر الدولية باسم <b class="text-[#18110d]">Mutrah Souq</b> أو <b class="text-[#18110d]">Muttrah Souq</b>، ويقع في حي مطرح قلب مدينة <b class="text-[#18110d]">مسقط</b> بمحافظة مسقط في سلطنة <b class="text-[#18110d]">عُمان</b> — على مقربة من كورنيش مطرح وقلعة مطرح. تصف بوابة عُمان السياحية الرسمية السوق بأنه سوق عربي تقليدي بمتاهة من الأزقة والمتاجر؛ هنا يمكن مشاهدة اللبان والبخور والعطور، المنسوجات، الأواني، التحف، المجوهرات الفضية والحرف العُمانية في مساحة تجارية ما زالت جزءاً من الحياة اليومية في مطرح، ويمكن دمجه بسهولة مع جولة على كورنيش مطرح ضمن استكشاف أوسع للمعالم القريبة.</p>
         <div class="mt-8 grid gap-4 sm:grid-cols-3">
-          <div class="card rounded-3xl p-5"><b class="block text-2xl text-[#176b68]">4.4 / 5 · 30,121</b><span class="text-sm text-[#66574e]">التقييم وعدد التقييمات المزوّدة على خرائط جوجل</span></div>
-          <div class="card rounded-3xl p-5"><b class="block text-2xl text-[#176b68]">09:00–23:00</b><span class="text-sm text-[#66574e]">ساعات التشغيل المزوّدة</span></div>
-          <div class="card rounded-3xl p-5"><b class="block text-2xl text-[#176b68]">JHC7+5Q</b><span class="text-sm text-[#66574e]">رمز الموقع في مسقط</span></div>
+          <div class="card rounded-3xl p-5"><b class="block text-2xl text-[#176b68]"><bdi dir="ltr">4.4 / 5 · 30,377</bdi></b><span class="text-sm text-[#66574e]">خرائط جوجل: لقطة 23 أكتوبر 2026، وليست تقييماً جمعه هذا الدليل</span></div>
+          <div class="card rounded-3xl p-5"><b class="block text-2xl text-[#176b68]"><bdi dir="ltr">16:00–22:00</bdi></b><span class="text-sm text-[#66574e]">الجمعة حسب خرائط جوجل؛ السبت–الخميس <bdi dir="ltr">09:00–23:00</bdi>؛ المحال قد تختلف</span></div>
+          <div class="card rounded-3xl p-5"><b class="block text-2xl text-[#176b68]">كورنيش مطرح</b><span class="text-sm text-[#66574e]">موقع السوق في حي مطرح، مسقط</span></div>
         </div>
       </div>
       <figure class="arch overflow-hidden bg-[#2b1b13] p-2 shadow-2xl">
-        <img src={gallery[0][0]} alt={gallery[0][1]} class="arch aspect-[4/5] h-full w-full object-cover" loading="lazy" />
+        <img src={gallery[0][0]} alt={gallery[0][1]} class="arch aspect-[4/5] w-full object-cover" loading="lazy" />
+        <figcaption class="p-3 text-xs text-white"><a class="underline" href="https://commons.wikimedia.org/wiki/File:Souq_Muttrah_9.jpg">Mohammad hajeer</a> · <a class="underline" href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> · تصغير/ضغط وقص عرض</figcaption>
       </figure>
     </div>
   </section>
@@ -108,10 +108,10 @@ const faq = {
     <div class="shell">
       <div class="mb-8 flex items-end justify-between gap-5">
         <div><p class="text-sm font-bold text-[#E2A52E]">مشاهد من المكان</p><h2 class="display mt-2 text-4xl font-black">تفاصيل تجعل سوق مطرح مختلفاً</h2></div>
-        <p class="hidden max-w-md text-sm text-[#d8c6a2] md:block">صور حقيقية مرتبطة بسوق مطرح وكورنيش مطرح، مع توثيق المصدر والترخيص داخل المشروع.</p>
+        <p class="hidden max-w-md text-sm text-[#d8c6a2] md:block">صور أرشيفية لسوق مطرح والكورنيش؛ أسماء المصورين والتراخيص أدناه، ولا تثبت الظروف الحالية.</p>
       </div>
       <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {gallery.map(([src,alt],i)=><figure class:list={["overflow-hidden rounded-3xl border border-white/10", i===3 && "md:col-span-2 lg:col-span-1"]}><img src={src} alt={alt} class="aspect-[4/5] h-full w-full object-cover transition duration-500 hover:scale-105" loading="lazy" /></figure>)}
+        {gallery.map(([src,alt],i)=><figure class:list={["overflow-hidden rounded-3xl border border-white/10", i===3 && "md:col-span-2 lg:col-span-1"]}><img src={src} alt={alt} class="aspect-[4/5] w-full object-cover transition duration-500 hover:scale-105" loading="lazy" /><figcaption class="p-3 text-xs"><a class="underline" href={photoCredits[i][1]}>{photoCredits[i][0]}</a> · <a class="underline" href={photoCredits[i][3]}>{photoCredits[i][2]}</a> · تصغير/ضغط وقص عرض</figcaption></figure>)}
       </div>
     </div>
   </section>
@@ -123,10 +123,10 @@ const faq = {
       <p class="kicker">خطط للزيارة</p>
       <h2 class="display mt-3 max-w-3xl text-4xl font-black md:text-5xl">المعلومات التي تحتاجها قبل دخول الأزقة</h2>
       <div class="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-        <article class="card rounded-3xl p-7"><h3 class="text-xl font-black">التذاكر والتكلفة</h3><p class="mt-3 text-[#66574e]">لا تُعرف رسوم دخول للسوق نفسه؛ الدخول مجاني عادةً. الميزانية تعتمد على مشترياتك، ومن الأفضل الاتفاق على السعر قبل إتمام الشراء.</p></article>
+        <article class="card rounded-3xl p-7"><h3 class="text-xl font-black">التذاكر والتكلفة</h3><p class="mt-3 text-[#66574e]">لم نجد تعريفة رسمية منشورة لدخول السوق في المصادر المشار إليها. أسعار الجولات الإعلانية ليست رسوم دخول؛ اتفق على تكلفة المشتريات والخدمات قبل الدفع.</p></article>
         <article class="card rounded-3xl p-7"><h3 class="text-xl font-black">أفضل وقت للزيارة</h3><p class="mt-3 text-[#66574e]">تشير بوابة عُمان السياحية إلى سبتمبر–مايو كفترة زيارة مناسبة. المساء لطيف للأجواء والإضاءة، بينما الصباح أكثر هدوءاً عادةً.</p></article>
         <article class="card rounded-3xl p-7"><h3 class="text-xl font-black">مدة الزيارة</h3><p class="mt-3 text-[#66574e]">خصص نحو ساعة إلى ساعتين لاستكشاف السوق دون استعجال، وأضف وقتاً للمشي على الكورنيش أو زيارة قلعة مطرح.</p></article>
-        <article class="card rounded-3xl p-7"><h3 class="text-xl font-black">المواقف</h3><p class="mt-3 text-[#66574e]">توجد مواقف عامة في منطقة الكورنيش والشوارع المحيطة، لكن الإشغال يرتفع في المساء والعطلات. الوصول مبكراً أو استخدام سيارة أجرة يقلل وقت البحث.</p></article>
+        <article class="card rounded-3xl p-7"><h3 class="text-xl font-black">المواقف</h3><p class="mt-3 text-[#66574e]">تحقق من المواقف المسموح بها واللوحات المحلية بمنطقة الكورنيش؛ لا نضمن التوافر أو الرسوم. احفظ مكان وقوفك واترك مداخل السوق والمشاة خالية.</p></article>
         <article class="card rounded-3xl p-7"><h3 class="text-xl font-black">الدفع والتسوق</h3><p class="mt-3 text-[#66574e]">تختلف وسائل الدفع بين المحال. احتفظ بقدر من الريال العُماني للمبالغ الصغيرة، واسأل عن السعر والجودة والمنشأ قبل الشراء.</p></article>
         <article class="card rounded-3xl p-7"><h3 class="text-xl font-black">آداب الزيارة</h3><p class="mt-3 text-[#66574e]">الملابس المحتشمة مناسبة لطبيعة المكان. استأذن قبل تصوير الباعة أو الأشخاص، واطلب الإذن قبل لمس التحف والفضيات الدقيقة.</p></article>
       </div>
@@ -176,7 +176,7 @@ const faq = {
       <p class="text-sm font-bold text-[#F6D98C]">الأسئلة الشائعة</p>
       <h2 class="display mt-3 text-4xl font-black">قبل أن تذهب</h2>
       <div class="mt-8 divide-y divide-white/15 border-y border-white/15">
-        {faq.mainEntity.map((item)=><details class="group py-5"><summary class="cursor-pointer list-none text-lg font-black">{item.name}<span class="float-left text-[#F6D98C] group-open:rotate-45">＋</span></summary><p class="mt-3 max-w-3xl text-[#d8eee9]">{item.acceptedAnswer.text}</p></details>)}
+        {faq.mainEntity.map((item)=><details class="group py-5"><summary class="cursor-pointer list-none text-lg font-black">{item.name}<span class="float-left text-[#F6D98C] group-open:rotate-45">＋</span></summary><p class="mt-3 max-w-3xl text-[#d8eee9]"><BidiText text={item.acceptedAnswer.text} /></p></details>)}
       </div>
     </div>
   </section>

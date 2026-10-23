@@ -1,7 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+Astro.response.status=404;
 ---
-<BaseLayout title="404 — الصفحة غير موجودة | دليل سوق مطرح" description="الصفحة التي تبحث عنها غير متوفرة في دليل سوق مطرح. عد إلى الصفحة الرئيسية لمتابعة الاستكشاف.">
+<BaseLayout noindex title="404 — الصفحة غير موجودة | دليل سوق مطرح" description="الصفحة التي تبحث عنها غير متوفرة في دليل سوق مطرح. عد إلى الصفحة الرئيسية لمتابعة الاستكشاف.">
   <section class="section pt-36">
     <div class="shell max-w-4xl text-center">
       <p class="kicker">خطأ 404</p>

@@ -10,8 +10,8 @@ const site = SITE_URL.trim() || undefined;
 export default defineConfig({
   site,
   output: 'server',
-  adapter: cloudflare(),
-  integrations: site ? [sitemap()] : [],
+  adapter: cloudflare({ configPath: "./wrangler.jsonc" }),
+  integrations: site ? [sitemap({ filter: (url) => !/\/404(?:\/|$)/.test(url) })] : [],
   vite: {
     plugins: [tailwindcss()]
   }

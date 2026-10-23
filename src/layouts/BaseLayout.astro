@@ -2,7 +2,6 @@
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import AnalyticsConsent from '../components/AnalyticsConsent.astro';
 import CookieBanner from '../components/CookieBanner.astro';
 
 interface Props {
@@ -24,6 +23,7 @@ const ogImage = image ? (site && image.startsWith('/') ? absolute(image) : image
 <html lang="ar-OM" dir="rtl">
   <head>
     <meta charset="UTF-8" />
+    <script is:inline src="/analytics.js"></script>
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#18110d" />
@@ -53,7 +53,6 @@ const ogImage = image ? (site && image.startsWith('/') ? absolute(image) : image
     <Header />
     <main><slot /></main>
     <Footer />
-    <AnalyticsConsent />
     <CookieBanner />
     <script is:inline>
       // تسجيل Service Worker للاستخدام دون اتصال (غير فعال في متصفحات لا تدعمه).

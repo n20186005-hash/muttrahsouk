@@ -1,14 +1,7 @@
-# المصادر المرجعية
-
-## مصادر رسمية ومؤسسية
-- تجربة عُمان — سوق مطرح: https://experienceoman.om/destinations/muscat/mutrah-souq
-- تجربة عُمان — مسقط: https://experienceoman.om/destinations/muscat
-- بلدية مسقط: https://www.muscatmunicipality.gov.om/
-- خريطة الموقع التي زوّد بها صاحب المشروع: https://maps.app.goo.gl/i18WFNytBsRsd3YW8
-
-## مرجع الكيان والصور
-- ويكي بيانات — سوق مطرح: https://www.wikidata.org/wiki/Q87834530
-- ويكيميديا كومنز — تصنيف سوق مطرح: https://commons.wikimedia.org/wiki/Category:Muttrah_souq
-- تفاصيل الاعتماد لكل صورة مستخدمة موجودة في `public/images/IMAGE_SOURCES.md`.
-
-تُستخدم المصادر الرسمية لتثبيت هوية المكان وسياقه الجغرافي، بينما تُعامل ساعات العمل والأسعار والمواقف والنقل كبيانات قابلة للتغيير ويُنصح بالتحقق منها قبل الزيارة.
+# Content sources
+- Experience Oman, Mutrah Souq: https://experienceoman.om/destinations/muscat/mutrah-souq — identity and September–May visitor period.
+- Muscat Municipality, سوق مطرح .. بين عبق الماضي وإشراقة الحاضر: https://www.mm.gov.om/ar/NewNewsDetails.aspx?MID=59&MoID=1&NID=1903 — market alleys, goods, historical name and municipal improvement descriptions; not proof of current facility operation.
+- Google Maps place snapshot, checked 23 October 2026: https://maps.app.goo.gl/i18WFNytBsRsd3YW8 — place coordinates, rating and weekly listing hours, not every vendor's schedule or verified operator contact.
+- Open-Meteo forecast: https://open-meteo.com/en/docs
+- Open-Meteo marine models and limits: https://open-meteo.com/en/docs/marine-weather-api — hourly mean sea level includes tides; limited coastal resolution, not suitable for coastal navigation.
+- Per-photo primary sources and licences: public/CREDITS.txt.

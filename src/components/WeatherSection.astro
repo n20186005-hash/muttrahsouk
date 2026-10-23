@@ -1,103 +1,8 @@
 ---
-// قسم الطقس — تُجلب البيانات عبر خدمة طقس على الخادم مع تخزين مؤقت
-// في Cloudflare: ذاكرة Cache API مشتركة + ذاكرة داخل العزل، والاسترجاع عند الفشل.
-
-const LAT = 23.6204;   // سوق مطرح، مسقط
-const LON = 58.5645;
-const TZ = 'Asia/Muscat';
-
-const api = new URL('https://api.open-meteo.com/v1/forecast');
-api.searchParams.set('latitude', String(LAT));
-api.searchParams.set('longitude', String(LON));
-api.searchParams.set(
-  'current',
-  'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,is_day,precipitation'
-);
-api.searchParams.set(
-  'daily',
-  'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,uv_index_max'
-);
-api.searchParams.set('timezone', TZ);
-api.searchParams.set('forecast_days', '7');
-const apiUrl = api.toString();
-const TTL_MS = 30 * 60 * 1000; // 30 دقيقة
-
-interface CurrentWeather {
-  time: string;
-  temperature_2m: number;
-  relative_humidity_2m: number;
-  apparent_temperature: number;
-  weather_code: number;
-  wind_speed_10m: number;
-  is_day: number;
-  precipitation: number;
-}
-interface DailyWeather {
-  time: string[];
-  weather_code: number[];
-  temperature_2m_max: number[];
-  temperature_2m_min: number[];
-  precipitation_probability_max: (number | null)[];
-  wind_speed_10m_max: number[];
-  uv_index_max?: (number | null)[];
-}
-interface Forecast {
-  current: CurrentWeather;
-  daily: DailyWeather;
-}
-
-const memory = new Map<string, { at: number; data: Forecast }>();
-
-async function fetchForecast(): Promise<Forecast | null> {
-  const now = Date.now();
-  const cached = memory.get(apiUrl);
-  if (cached && now - cached.at < TTL_MS) return cached.data;
-
-  // Cache API متاحة ككائن عام في بيئة Cloudflare Workers فقط؛
-  // في بيئة التطوير المحلية تكون غير موجودة فنلجأ لشبكة الاتصال مباشرة.
-  let cfCache: Cache | undefined;
-  try {
-    cfCache = (globalThis as unknown as { caches?: { default?: Cache } }).caches?.default;
-  } catch {
-    cfCache = undefined;
-  }
-
-  try {
-    if (cfCache) {
-      const hit = await cfCache.match(new Request(apiUrl));
-      if (hit && hit.ok) {
-        const data = (await hit.json()) as Forecast;
-        memory.set(apiUrl, { at: now, data });
-        return data;
-      }
-    }
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 9000);
-    try {
-      const res = await fetch(apiUrl, {
-        headers: { accept: 'application/json' },
-        signal: controller.signal,
-      });
-      if (!res.ok) return null;
-      const data = (await res.json()) as Forecast;
-      memory.set(apiUrl, { at: now, data });
-      if (cfCache) {
-        const ttl = Math.round(TTL_MS / 1000);
-        const cachedRes = new Response(JSON.stringify(data), {
-          headers: { 'Cache-Control': `public, max-age=${ttl}` },
-        });
-        void cfCache.put(new Request(apiUrl), cachedRes).catch(() => undefined);
-      }
-      return data;
-    } finally {
-      clearTimeout(timer);
-    }
-  } catch {
-    return null;
-  }
-}
-
-const forecast = await fetchForecast();
+import BidiText from './BidiText.astro';
+import { forecast as loadForecast, stamp, type Forecast } from "../lib/environment";
+type CurrentWeather=Forecast["current"];type DailyWeather=Forecast["daily"];
+const forecast=await loadForecast();
 
 const WMO: Record<number, string> = {
   0: 'صافٍ',
@@ -145,7 +50,7 @@ function dayLabel(iso: string, index: number): string {
 }
 function shortTime(iso: string): string {
   try {
-    return new Intl.DateTimeFormat('ar-OM', { hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
+    return new Intl.DateTimeFormat('ar-OM', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Muscat' }).format(new Date(stamp(iso)));
   } catch {
     return '';
   }
@@ -180,7 +85,7 @@ function buildAdvice(cur: CurrentWeather, day: DailyWeather) {
   const wl = windLevel(wind);
   const uv = day.uv_index_max?.[0] ?? 0;
   const rainy = isRainy(code);
-  const heavy = [65, 82, 95, 96, 99].includes(code);
+  const heavy = [65, 67, 82].includes(code);
   const thunder = [95, 96, 99].includes(code);
   const fog = [45, 48].includes(code);
   const diff = maxT - minT;
@@ -195,18 +100,18 @@ function buildAdvice(cur: CurrentWeather, day: DailyWeather) {
     activity.push('احتمال المطر كبير، فضّل التجول تحت سقف السوق المظلّل وأجّل الأنشطة البحرية المكشوفة.');
     items.push('مظلة أو مطر غطاء خفيف');
   }
-  if (rainy && !heavy) {
-    outfit.push('ثمّة مطر خفيف، اختر حذاءً غير زلق للمشي على الأرض الرطبة.');
+  if (rainy && !heavy && !thunder) {
+    outfit.push('يشير الرمز إلى هطول، اختر حذاءً غير زلق للمشي على الأرض الرطبة.');
     activity.push('تجربة الأماكن المكشوفة أقل متعة اليوم؛ ركّز على أروقة السوق المسقوفة.');
     items.push('مظلة قابلة للطي');
   }
   if (heavy) {
     outfit.push('الأمطار غزيرة، ارتدِ معطفاً مقاوماً للماء.');
-    activity.push('لا يُنصح بالأنشطة البحرية المفتوحة؛ القوارب والتلفريك قد تتوقف، ويفضّل البقاء في المناطق المغطاة.');
+    activity.push('لا يُنصح بالأنشطة البحرية المفتوحة؛ راجع تنبيهات الجهات المحلية ويفضّل البقاء في المناطق المغطاة.');
     items.push('مطر غطاء (مطرية)، وتجنّب المظلة الطويلة مع الرياح');
   }
   if (thunder) {
-    risk = 'تنبيه: رعد وبرق متوقّع — لا تصعد المرتفعات، ولا تقترب من البحر أو تقف تحت الأشجار؛ المشاريع المائية متوقّفة غالباً.';
+    risk = 'تنبيه: رعد وبرق متوقّع — لا تصعد المرتفعات، ولا تقترب من البحر أو تقف تحت الأشجار؛ تابع التنبيهات المحلية.';
     activity.push('احذر البرق، وابتعد عن البحر والمرتفعات المكشوفة.');
   }
   if (maxT >= 32) {
@@ -227,27 +132,27 @@ function buildAdvice(cur: CurrentWeather, day: DailyWeather) {
     items.push('واقٍ شمسي، نظارة شمسية، وقبعة');
   }
   if (wl >= 7) {
-    const msg = 'تنبيه: الرياح قوية — ابتعد عن اللوحات الإعلانية والصخور البحرية؛ المشاريع البحرية المفتوحة متوقّفة غالباً.';
+    const msg = 'تنبيه: الرياح قوية — ابتعد عن اللوحات الإعلانية والصخور البحرية؛ تابع التنبيهات المحلية.';
     risk = risk ? `${risk} ${msg}` : msg;
-    activity.push('المشاريع البحرية المفتوحة متوقّفة غالباً بسبب الرياح.');
+    activity.push('تحقق من المشغل بشأن أي رحلة بحرية؛ لا يحدد النموذج حالة تشغيلها.');
   } else if (wl >= 5) {
     outfit.push('الرياح نشطة نسبياً وقد تطير قبعتك؛ لا تلبس ثوباً واسعاً يصعب التحكّم به.');
-    activity.push('القوارب السياحية وبعض الأنشطة المكشوفة قد تتوقف بسبب الرياح.');
+    activity.push('تحقق من شروط الرحلات المكشوفة لدى المشغل.');
   }
   if (fog) {
-    const msg = 'تنبيه: ضباب يحدّ من الرؤية — العبّارات والرحلات البحرية قد تتأخر، ولا تصلح مشاهدة البحر أو المرتفعات اليوم.';
+    const msg = 'تنبيه: ضباب يحدّ من الرؤية — قد تتغير الرؤية محلياً؛ تحقق من ظروف الطريق والتنبيهات.';
     risk = risk ? `${risk} كما ${msg}` : msg;
-    activity.push('الرؤية محدودة، فلا تصلح مشاهدة الكورنيش أو المرتفعات اليوم.');
+    activity.push('الرؤية محدودة، عدّل المشي المكشوف حسب الظروف الفعلية.');
   }
   if (!rainy && !fog && !thunder && (code === 0 || code === 1)) {
-    activity.push('الجو صحو ومناسب للتجول الخارجي ولقطة الغروب على الكورنيش.');
+    activity.push('الرمز يشير إلى صحو؛ اختر وقت المشي حسب الحرارة والأشعة والظروف الفعلية.');
     if (uv < 5) items.push('لا تنسَ واقٍ شمسي خفيف');
   } else if (!rainy && !fog && (code === 2 || code === 3)) {
-    activity.push('الضوء ناعم ومناسب جداً للتصوير وللتجول الطويل في الهواء الطلق دون لهيب الشمس.');
+    activity.push('الضوء ناعم وقد يلائم التصوير؛ خطط للمشي بحسب الحرارة والأشعة والظروف الفعلية.');
   }
 
   if (outfit.length === 0 && activity.length === 0 && items.length === 0 && !risk) {
-    activity.push('الأحوال مستقرة ومناسبة لزيارة هادئة؛ خطّط وفق راحتك.');
+    activity.push('خطط للزيارة بحسب الظروف الفعلية والتنبيهات المحلية.');
   }
   return { risk, outfit, activity, items };
 }
@@ -269,16 +174,16 @@ const advice = forecast ? buildAdvice(forecast.current, forecast.daily) : null;
         <div class="rounded-[2rem] bg-[#176b68] p-7 text-white">
           <div class="grid items-center gap-8 md:grid-cols-[auto_1fr]">
             <div>
-              <p class="text-sm font-bold text-[#F6D98C]">الآن في سوق مطرح</p>
-              <p class="mt-1 text-6xl font-black leading-none">{round(forecast.current.temperature_2m)}<span class="text-2xl">°م</span></p>
+              <p class="text-sm font-bold text-[#F6D98C]">تقدير النموذج قرب سوق مطرح</p>
+              <p dir="ltr" class="mt-1 text-6xl font-black leading-none">{round(forecast.current.temperature_2m)}<span class="text-2xl">°م</span></p>
               <p class="mt-2 text-lg font-bold">{codeName(forecast.current.weather_code)}{forecast.current.is_day === 0 ? ' (ليلاً)' : ''}</p>
-              <p class="mt-1 text-sm text-[#d8eee9]">محدث في {shortTime(forecast.current.time)}</p>
+              <p class="mt-1 text-sm text-[#d8eee9]">محدث في <bdi dir="ltr">{shortTime(forecast.current.time)}</bdi></p>
             </div>
             <div class="grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
-              <div class="rounded-2xl bg-white/12 px-3 py-4"><p class="text-xs text-[#d8eee9]">الإحساس الحراري</p><p class="mt-1 text-xl font-black">{round(forecast.current.apparent_temperature)}°م</p></div>
-              <div class="rounded-2xl bg-white/12 px-3 py-4"><p class="text-xs text-[#d8eee9]">الرطوبة</p><p class="mt-1 text-xl font-black">{round(forecast.current.relative_humidity_2m)}%</p></div>
-              <div class="rounded-2xl bg-white/12 px-3 py-4"><p class="text-xs text-[#d8eee9]">الرياح</p><p class="mt-1 text-xl font-black">{round(forecast.current.wind_speed_10m)}<span class="text-sm">كم/س</span></p></div>
-              <div class="rounded-2xl bg-white/12 px-3 py-4"><p class="text-xs text-[#d8eee9]">احتمال مطر اليوم</p><p class="mt-1 text-xl font-black">{forecast.daily.precipitation_probability_max[0] ?? 0}%</p></div>
+              <div class="rounded-2xl bg-white/12 px-3 py-4"><p class="text-xs text-[#d8eee9]">الإحساس الحراري</p><p dir="ltr" class="mt-1 text-xl font-black">{round(forecast.current.apparent_temperature)}°م</p></div>
+              <div class="rounded-2xl bg-white/12 px-3 py-4"><p class="text-xs text-[#d8eee9]">الرطوبة</p><p dir="ltr" class="mt-1 text-xl font-black">{round(forecast.current.relative_humidity_2m)}%</p></div>
+              <div class="rounded-2xl bg-white/12 px-3 py-4"><p class="text-xs text-[#d8eee9]">الرياح</p><p dir="ltr" class="mt-1 text-xl font-black">{round(forecast.current.wind_speed_10m)}<span class="text-sm">كم/س</span></p></div>
+              <div class="rounded-2xl bg-white/12 px-3 py-4"><p class="text-xs text-[#d8eee9]">احتمال مطر اليوم</p><p dir="ltr" class="mt-1 text-xl font-black">{forecast.daily.precipitation_probability_max[0] ?? 0}%</p></div>
             </div>
           </div>
         </div>
@@ -335,20 +240,20 @@ const advice = forecast ? buildAdvice(forecast.current, forecast.daily) : null;
                   <p class="text-xs font-black text-[#176b68]">{dayLabel(day, i)}</p>
                   <p class="mt-1 text-sm text-[#58483e]">{codeName(code)}</p>
                   <p class="mt-3 flex items-baseline justify-between gap-2 text-sm font-bold">
-                    <span class={rainy ? 'text-[#176b68]' : cloudy ? 'text-[#B98739]' : 'text-[#0a7a52]'}>▲ {round(max)}°</span>
-                    <span class="text-[#66574e]">▼ {round(min)}°</span>
+                    <span dir="ltr" class={rainy ? 'text-[#176b68]' : cloudy ? 'text-[#B98739]' : 'text-[#0a7a52]'}>▲ {round(max)}°</span>
+                    <span dir="ltr" class="text-[#66574e]">▼ {round(min)}°</span>
                   </p>
                   <p class="mt-2 text-xs text-[#66574e]">
-                    {rain != null ? `مطر ${rain}%` : 'مطر —'}
+                    <BidiText text={rain != null ? `احتمال مطر ${rain}%` : 'احتمال مطر —'} />
                     <span class="mx-1">·</span>
-                    رياح {round(forecast.daily.wind_speed_10m_max[i])} كم/س
+                    رياح <bdi dir="ltr">{round(forecast.daily.wind_speed_10m_max[i])} كم/س</bdi>
                   </p>
                 </div>
               );
             })}
           </div>
           <p class="mt-5 text-xs leading-6 text-[#66574e]">
-            البيانات استرشادية وتُحدَّث دورياً عبر الخادم؛ قد تختلف التوقعات فعلياً، لذا راجع مصادر الأرصاد المحلية قبل اتخاذ قرار يتعلق بخطة يومك.
+            بيانات نموذج Open-Meteo قرب السوق وليست محطة رصد بالموقع. التخزين المؤقت حتى 30 دقيقة؛ قد تختلف التوقعات فعلياً، لذا راجع مصادر الأرصاد المحلية قبل اتخاذ قرار يتعلق بخطة يومك.
           </p>
         </div>
       </div>

@@ -8,22 +8,7 @@
         <button type="button" id="cookie-accept" class="rounded-full bg-[#176b68] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#1a7d7a]">قبول ملفات التحليل</button>
       </div>
     </div>
+    <p id="banner-status" role="status" class="shell pb-3 text-sm text-white"></p>
   </div>
 </div>
-<script is:inline>
-  const KEY = 'mutrah-cookie-consent';
-  const banner = document.getElementById('cookie-banner');
-  if (banner && localStorage.getItem(KEY) === null) {
-    banner.hidden = false;
-    document.getElementById('cookie-reject')?.addEventListener('click', () => {
-      localStorage.setItem(KEY, 'necessary');
-      banner.hidden = true;
-    });
-    document.getElementById('cookie-accept')?.addEventListener('click', () => {
-      localStorage.setItem(KEY, 'analytics');
-      banner.hidden = true;
-      // تفرّغ AnalyticsConsent على هذا الحدث لتحميل أداة التحليل فوراً دون إعادة تحميل.
-      window.dispatchEvent(new Event('consent-updated'));
-    });
-  }
-</script>
+<script is:inline src="/cookie-settings.js" defer></script>

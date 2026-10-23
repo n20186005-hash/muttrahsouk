@@ -1,0 +1,5 @@
+---
+interface Props { text:string; }
+const parts=Astro.props.text.split(/(-?\d+(?:[.,]\d+)*(?:\s*[–—−/:]\s*-?\d+(?:[.,]\d+)*)*(?:%|°م|°| كم\/س)?)/g);
+---
+{parts.map((part:string,i:number)=>i%2 ? <bdi dir="ltr">{part}</bdi> : part)}

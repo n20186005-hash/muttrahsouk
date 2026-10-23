@@ -26,16 +26,16 @@ for (const group of ['dependencies','devDependencies']) {
 if (pkg.packageManager !== 'pnpm@11.24.0') fail('packageManager is not pinned to pnpm@11.24.0');
 if (pkg.engines?.node !== read('.node-version').trim()) fail('engines.node and .node-version differ');
 
-const src = read('src/pages/index.astro') + read('src/layouts/BaseLayout.astro');
+const src = read('src/pages/index.astro') + read('src/layouts/BaseLayout.astro') + read('src/components/TransportSection.astro');
 if (!src.includes('lang="ar-OM"') || !src.includes('dir="rtl"')) fail('Arabic Oman locale/RTL is missing');
 if (!src.includes('!1sar!2som')) fail('Google map is not localized to Arabic/Oman');
 if (!src.includes('FAQPage')) fail('FAQPage schema missing');
 if (!src.includes("'TouristAttraction'")) fail('TouristAttraction schema missing');
-if (!src.includes("'LocalBusiness'")) fail('LocalBusiness schema missing');
+if (src.includes('aggregateRating:')) fail('third-party rating must not become own aggregateRating');
 
 const config = read('astro.config.mjs');
 if (!config.includes("const SITE_URL = 'https://muttrahsouk.com';")) fail('single configured SITE_URL point missing');
-if (!config.includes('integrations: site ? [sitemap()] : []')) fail('conditional sitemap configuration missing');
+if (!config.includes('integrations: site ? [sitemap(')) fail('conditional sitemap configuration missing');
 
 const forbidden = [ ['example','.com'].join(''), ['local','host'].join(''), ['chrome-extension', '://'].join('') ];
 function files(dir) { return readdirSync(dir).flatMap(n => { const p=join(dir,n); return statSync(p).isDirectory()?files(p):[p]; }); }

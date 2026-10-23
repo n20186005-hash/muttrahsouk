@@ -1,3 +1,1 @@
-# إعادة توجيه www إلى النطاق الأساسي (توحيد الكانونيكال)
-# HTTPS مفروض عبر إعداد «Always Use HTTPS» في Cloudflare.
-https://www.muttrahsouk.com/* https://muttrahsouk.com/:splat 301
+# Canonical protocol and exact www host are handled before Astro's static fast path by src/worker.js.
