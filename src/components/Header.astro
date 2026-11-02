@@ -1,19 +1,48 @@
 ---
 import Logo from './Logo.astro';
+import { navGroups as groups } from '../lib/nav';
 ---
 <header class="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#18110d]/95 text-white backdrop-blur">
-  <div class="shell flex h-20 items-center justify-between gap-6">
+  <div class="shell flex h-20 items-center justify-between gap-4">
     <Logo />
-    <nav aria-label="التنقل الرئيسي" class="hidden items-center gap-5 text-sm font-bold lg:flex xl:gap-6">
-      <a href="/#about" class="hover:text-[#E2A52E]">عن السوق</a>
-      <a href="/#history" class="hover:text-[#E2A52E]">التاريخ</a>
-      <a href="/#visit" class="hover:text-[#E2A52E]">خطط للزيارة</a>
-      <a href="/#facilities" class="hover:text-[#E2A52E]">المرافق</a>
-      <a href="/#weather" class="hover:text-[#E2A52E]">الطقس</a>
-      <a href="/#tides" class="hover:text-[#E2A52E]">المد والجزر</a>
-      <a href="/#sources" class="hover:text-[#E2A52E]">المصادر</a>
-      <a href="/#faq" class="hover:text-[#E2A52E]">الأسئلة الشائعة</a>
+    <nav aria-label="التنقل الرئيسي" class="hidden items-center gap-1 text-sm font-bold lg:flex">
+      <a href="/#about" class="rounded-full px-3 py-2 hover:text-[#E2A52E]">عن السوق</a>
+      {groups.map((g) => (
+        <details class="group relative">
+          <summary class="cursor-pointer list-none rounded-full px-3 py-2 hover:text-[#E2A52E] [&::-webkit-details-marker]:hidden">
+            {g.title} <span aria-hidden="true" class="text-[#B98739]">▾</span>
+          </summary>
+          <div class="absolute right-0 top-full z-50 mt-1 w-72 rounded-3xl border border-white/10 bg-[#18110d] p-3 shadow-2xl">
+            <ul class="grid gap-1">
+              {g.links.map(([href, label]) => (
+                <li><a href={href} class="block rounded-2xl px-3 py-2 text-[#f0e4cd] hover:bg-white/10 hover:text-[#F6D98C]">{label}</a></li>
+              ))}
+            </ul>
+          </div>
+        </details>
+      ))}
+      <a href="/#weather" class="rounded-full px-3 py-2 hover:text-[#E2A52E]">الطقس</a>
+      <a href="/#sources" class="rounded-full px-3 py-2 hover:text-[#E2A52E]">المصادر</a>
     </nav>
-    <a href="https://maps.app.goo.gl/i18WFNytBsRsd3YW8" rel="nofollow noopener" target="_blank" class="rounded-full border border-[#B98739]/70 px-4 py-2 text-sm font-bold text-[#F6D98C] hover:bg-[#B98739] hover:text-[#18110d]">الاتجاهات</a>
+
+    <div class="flex items-center gap-2">
+      <a href="https://maps.app.goo.gl/i18WFNytBsRsd3YW8" rel="nofollow noopener" target="_blank" class="hidden rounded-full border border-[#B98739]/70 px-4 py-2 text-sm font-bold text-[#F6D98C] hover:bg-[#B98739] hover:text-[#18110d] sm:inline-flex">الاتجاهات</a>
+      <details class="group relative lg:hidden">
+        <summary class="cursor-pointer list-none rounded-full border border-white/25 px-4 py-2 text-sm font-bold [&::-webkit-details-marker]:hidden">الأدلة <span aria-hidden="true" class="text-[#B98739]">▾</span></summary>
+        <div class="absolute left-0 top-full z-50 mt-2 max-h-[75vh] w-[min(92vw,34rem)] overflow-y-auto rounded-3xl border border-white/10 bg-[#18110d] p-4 shadow-2xl">
+          <a href="/" class="block rounded-2xl px-3 py-2 font-black text-[#F6D98C] hover:bg-white/10">الصفحة الرئيسية</a>
+          {groups.map((g) => (
+            <div class="mt-3">
+              <p class="px-3 text-xs font-black tracking-wide text-[#B98739]">{g.title}</p>
+              <ul class="mt-1 grid gap-1 sm:grid-cols-2">
+                {g.links.map(([href, label]) => (
+                  <li><a href={href} class="block rounded-2xl px-3 py-2 text-sm text-[#f0e4cd] hover:bg-white/10 hover:text-[#F6D98C]">{label}</a></li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </details>
+    </div>
   </div>
 </header>

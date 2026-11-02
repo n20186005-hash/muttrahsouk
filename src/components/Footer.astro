@@ -1,5 +1,22 @@
+---
+import { navGroups } from '../lib/nav';
+---
 <footer class="bg-[#18110d] py-12 text-[#d8c6a2]">
-  <div class="shell grid gap-8 lg:grid-cols-[1fr_auto]">
+  <div class="shell">
+    <nav aria-label="أدلة الموقع" class="grid gap-8 border-b border-white/10 pb-9 sm:grid-cols-2 lg:grid-cols-5">
+      {navGroups.map((g) => (
+        <div>
+          <p class="text-sm font-black text-[#F6D98C]">{g.title}</p>
+          <ul class="mt-3 space-y-2 text-sm">
+            {g.links.map(([href, label]) => (
+              <li><a class="hover:text-white hover:underline" href={href}>{label}</a></li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </nav>
+  </div>
+  <div class="shell mt-9 grid gap-8 lg:grid-cols-[1fr_auto]">
     <div class="max-w-3xl space-y-3 text-sm">
       <p class="font-bold text-white">هذا الموقع مشروع مستقل لدليل معلومات الزوار، ولا يتبع أي جهة حكومية أو منظمة رسمية.</p>
       <p>تستند معلومات الموقع إلى مصادر عامة ومقارنات مرجعية من بلدية مسقط، ووزارة التراث والسياحة في سلطنة عُمان، ولا تتضمن توصيات تجارية مدفوعة.</p>
